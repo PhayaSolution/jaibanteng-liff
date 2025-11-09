@@ -1,0 +1,12 @@
+export { default as CatIcon } from './cat-icon.component';
+export { default as SearchIcon } from './search-icon.component';
+export { default as PlusIcon } from './plus-icon.component';
+export { default as ChartIcon } from './chart-icon.component';
+export { default as PetIcon } from './pet-icon.component';
+export { default as CoffeeIcon } from './coffee-icon.component';
+export { default as FoodIcon } from './food-icon.component';
+export { default as OilIcon } from './oil-icon.component';
+export { default as ListIcon } from './list-icon.component';
+export { default as ProfileIcon } from './profile-icon.component';
+export { default as BackspaceIcon } from './backspace-icon.component';
+

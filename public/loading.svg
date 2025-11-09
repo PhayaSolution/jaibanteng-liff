@@ -1,0 +1,124 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <style>
+    :root{
+      --ink:#111;             /* สีหมึก */
+      --durDraw:2.4s;         /* เวลาวาดเส้น */
+      --durOrbit:12s;         /* ความเร็วโคจร */
+      --durBreath:4.2s;       /* จังหวะลอยขึ้นลง */
+      --durWobble:2.8s;       /* จังหวะสั่นเบา ๆ */
+    }
+
+    .ink{
+      stroke:var(--ink);
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      vector-effect:non-scaling-stroke;
+      /* วาดเส้นแบบหมึกค่อย ๆ โผล่ */
+      stroke-dasharray:var(--len);
+      stroke-dashoffset:var(--len);
+      animation:draw var(--durDraw) ease-in-out forwards;
+    }
+
+    .breath{
+      animation:breath var(--durBreath) ease-in-out infinite;
+      transform-origin:256px 260px;
+    }
+
+    /* สั่นนิด ๆ แบบวาดมือ */
+    .wobble{
+      animation:wobble var(--durWobble) ease-in-out infinite;
+      transform-origin:256px 260px;
+    }
+
+    .orbit{
+      animation:orbit var(--durOrbit) linear infinite;
+      transform-origin:256px 180px;
+    }
+
+    .pill rect{
+      fill:#fff;
+      stroke:var(--ink);
+      stroke-width:2.2;
+      rx:18;
+    }
+
+    .mute{ stroke:var(--ink); stroke-opacity:.12; }
+
+    text{
+      font-family: "Hiragino Sans", "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      fill:#111;
+      font-size:14px;
+      dominant-baseline:middle;
+      text-anchor:middle;
+      letter-spacing:.5px;
+    }
+
+    .fade{ opacity:0; animation:fade .9s ease forwards; animation-delay:calc(var(--durDraw) - .2s); }
+
+    @keyframes draw { to { stroke-dashoffset:0; } }
+    @keyframes fade { to { opacity:1; } }
+    @keyframes breath {
+      0%,100% { transform:translateY(8px) }
+      50%     { transform:translateY(-14px) }
+    }
+    @keyframes wobble {
+      0%,100% { transform:rotate(-1.6deg) }
+      50%     { transform:rotate(1.6deg) }
+    }
+    @keyframes orbit { to { transform:rotate(360deg) } }
+
+    /* ลดแอนิเมชันสำหรับคนที่ไม่ต้องการ motion */
+    @media (prefers-reduced-motion: reduce) {
+      .breath, .wobble, .orbit { animation: none; }
+    }
+  </style>
+
+  <!-- เส้นทางโคจรจาง ๆ -->
+
+  <!-- แมว (ลายเส้นหมึกเรียบๆ) -->
+  <g class="breath wobble">
+    <!-- โครงหน้า -->
+    <path class="ink" style="--len:720" pathLength="720"
+      d="M164 188
+         c-26 12-42 38-42 66
+         c0 48 44 88 134 88
+         c90 0 134-40 134-88
+         c0-28-16-54-42-66
+         M164 188
+         c-9-26-7-48 17-68
+         c10 12 26 22 40 24
+         c-6-12-6-26-1-40
+         c22 7 44 7 66 0
+         c5 14 5 28-1 40
+         c14-2 30-12 40-24
+         c24 20 26 42 17 68" />
+
+    <!-- หู -->
+    <path class="ink" style="--len:210" pathLength="210" d="M168 118 l-44 48 l62 10" />
+    <path class="ink" style="--len:210" pathLength="210" d="M344 118 l44 48 l-62 10" />
+
+    <!-- ตาแบบโค้งนุ่ม -->
+    <path class="ink" style="--len:80"  pathLength="80"  d="M204 220 q14 -10 28 0" />
+    <path class="ink" style="--len:80"  pathLength="80"  d="M280 220 q14 -10 28 0" />
+    <!-- จมูกสามเหลี่ยมเล็ก -->
+    <path class="ink" style="--len:70"  pathLength="70"  d="M256 232 l9 9 h-18 z" />
+    <!-- ปากยิ้ม -->
+    <path class="ink" style="--len:160" pathLength="160" d="M256 240 c-10 12 -24 14 -38 10" />
+    <path class="ink" style="--len:160" pathLength="160" d="M256 240 c10 12 24 14 38 10" />
+    <!-- หนวด -->
+    <path class="ink" style="--len:190" pathLength="190" d="M206 248 h-52" />
+    <path class="ink" style="--len:190" pathLength="190" d="M204 258 h-68" />
+    <path class="ink" style="--len:190" pathLength="190" d="M308 248 h52" />
+    <path class="ink" style="--len:190" pathLength="190" d="M310 258 h68" />
+
+    <!-- ลำตัวเรียบง่าย -->
+    <path class="ink" style="--len:500" pathLength="500"
+      d="M168 316
+         c22 18 164 18 184 0
+         M202 316 v74
+         M310 316 v74"/>
+  </g>
+
+
+</svg>

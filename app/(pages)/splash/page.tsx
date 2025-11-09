@@ -2,18 +2,22 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import CatIcon from './components/icons/cat-icon.component';
+import CatIcon from '@/app/components/icons/cat-icon.component';
 
-export default function Home() {
+export default function SplashPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to splash page
-    router.push('/splash');
+    // Auto redirect to dashboard after 2 seconds
+    const timer = setTimeout(() => {
+      router.push('/dashboard');
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-black">
+    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-white dark:bg-black">
       <div className="flex flex-col items-center gap-4">
         <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40">
           <CatIcon className="w-full h-full text-black dark:text-white" />
@@ -30,3 +34,4 @@ export default function Home() {
     </div>
   );
 }
+
