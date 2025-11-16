@@ -1,5 +1,4 @@
 import { prisma } from './prisma';
-import { User } from '@prisma/client';
 
 export interface LineProfile {
   userId: string;
@@ -10,10 +9,12 @@ export interface LineProfile {
   phoneNumber?: string;
 }
 
+type PrismaUser = Awaited<ReturnType<typeof prisma.user.findUnique>>;
+
 /**
  * Get or create user from LINE profile
  */
-export async function getOrCreateUser(profile: LineProfile): Promise<User> {
+export async function getOrCreateUser(profile: LineProfile): Promise<NonNullable<PrismaUser>> {
   let user = await prisma.user.findUnique({
     where: { lineUserId: profile.userId },
   });
@@ -54,7 +55,7 @@ export async function getOrCreateUser(profile: LineProfile): Promise<User> {
 /**
  * Get user by LINE userId
  */
-export async function getUserByLineUserId(lineUserId: string): Promise<User | null> {
+export async function getUserByLineUserId(lineUserId: string): Promise<PrismaUser> {
   return prisma.user.findUnique({
     where: { lineUserId },
   });
@@ -63,7 +64,7 @@ export async function getUserByLineUserId(lineUserId: string): Promise<User | nu
 /**
  * Get user by ID
  */
-export async function getUserById(id: string): Promise<User | null> {
+export async function getUserById(id: string): Promise<PrismaUser> {
   return prisma.user.findUnique({
     where: { id },
   });
