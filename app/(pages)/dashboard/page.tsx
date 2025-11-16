@@ -11,7 +11,7 @@ import TransactionList from '@/app/components/dashboard/transaction-list.compone
 import TaskList from '@/app/components/dashboard/task-list.component';
 import { SearchIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
-import { fetchTransactions, fetchTransactionStats, deleteTransaction } from '@/app/lib/api';
+import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction } from '@/app/lib/api';
 import { Transaction } from '@/app/lib/types';
 import { getUserSession } from '@/app/utils/storage.util';
 
@@ -47,7 +47,7 @@ interface TaskGroup {
     tags?: string[];
     createdAt?: string;
     date?: string;
-    status: 'done' | 'back';
+    status?: 'done' | 'active';
   }>;
 }
 
@@ -175,12 +175,12 @@ function transformTransactionsToGroups(transactions: Transaction[]): Transaction
   });
 }
 
-// Transform transactions to task groups (filter by status BACK)
+// Transform transactions to task groups (show all transactions, filter by selected period)
 function transformTransactionsToTaskGroups(transactions: Transaction[]): TaskGroup[] {
-  const backTransactions = transactions.filter((tx) => tx.status === 'BACK');
+  // Show all transactions in the selected period (not just BACK status)
   const groupsMap = new Map<string, TaskGroup>();
 
-  backTransactions.forEach((tx) => {
+  transactions.forEach((tx) => {
     const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
     
     if (!groupsMap.has(date)) {
@@ -209,7 +209,7 @@ function transformTransactionsToTaskGroups(transactions: Transaction[]): TaskGro
         : undefined,
       createdAt: tx.createdAt,
       date: tx.date,
-      status: 'back',
+      status: tx.status === 'DONE' ? 'done' : 'active', // Only 2 states: 'done' or 'active'
     });
   });
 
@@ -555,18 +555,162 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDoneTransaction = async (transaction: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      await updateTransaction(session.lineUserId, transaction.id, { status: 'DONE' });
+      // Update transaction status in local state
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === transaction.id ? { ...t, status: 'DONE' as const } : t))
+      );
+    } catch (err) {
+      console.error('Failed to mark transaction as done:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark transaction as done';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    }
+  };
+
+  const handleBackTransaction = async (transaction: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      // Change status from DONE back to ACTIVE
+      await updateTransaction(session.lineUserId, transaction.id, { status: 'ACTIVE' });
+      // Update transaction status in local state
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === transaction.id ? { ...t, status: 'ACTIVE' as const } : t))
+      );
+    } catch (err) {
+      console.error('Failed to mark transaction as active:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark transaction as active';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    }
+  };
+
+  const handleDoneAllForDate = async (date: string) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    // Find all transactions for this date that are not already DONE
+    const transactionsForDate = transactions.filter((tx) => {
+      const txDate = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+      return txDate === date && tx.status !== 'DONE';
+    });
+
+    if (transactionsForDate.length === 0) {
+      alert('ไม่มีรายการที่ต้องทำ Done สำหรับวันนี้');
+      return;
+    }
+
+    if (!confirm(`คุณต้องการทำ Done ทั้งหมด ${transactionsForDate.length} รายการสำหรับวันที่ ${date} หรือไม่?`)) {
+      return;
+    }
+
+    try {
+      // Update all transactions in parallel
+      await Promise.all(
+        transactionsForDate.map((tx) =>
+          updateTransaction(session.lineUserId, tx.id, { status: 'DONE' })
+        )
+      );
+      
+      // Update transactions in local state
+      setTransactions((prev) =>
+        prev.map((t) => {
+          const txDate = format(new Date(t.date), 'dd/MM/yyyy', { locale: th });
+          if (txDate === date && t.status !== 'DONE') {
+            return { ...t, status: 'DONE' as const };
+          }
+          return t;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to mark all transactions as done:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark all transactions as done';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    }
+  };
+
+  const handleDoneAllForPeriod = async () => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    // Find all transactions in the current period that are not already DONE
+    const { startDate, endDate } = getDateRange(selectedPeriod);
+    const transactionsInPeriod = transactions.filter((tx) => {
+      const txDate = new Date(tx.date);
+      const periodStart = new Date(startDate);
+      const periodEnd = new Date(endDate);
+      return txDate >= periodStart && txDate <= periodEnd && tx.status !== 'DONE';
+    });
+
+    if (transactionsInPeriod.length === 0) {
+      alert(`ไม่มีรายการที่ต้องทำ Done สำหรับ${selectedPeriod}`);
+      return;
+    }
+
+    if (!confirm(`คุณต้องการทำ Done ทั้งหมด ${transactionsInPeriod.length} รายการสำหรับ${selectedPeriod} หรือไม่?`)) {
+      return;
+    }
+
+    try {
+      // Update all transactions in parallel
+      await Promise.all(
+        transactionsInPeriod.map((tx) =>
+          updateTransaction(session.lineUserId, tx.id, { status: 'DONE' })
+        )
+      );
+      
+      // Update transactions in local state
+      const periodStart = new Date(startDate);
+      const periodEnd = new Date(endDate);
+      setTransactions((prev) =>
+        prev.map((t) => {
+          const txDate = new Date(t.date);
+          if (txDate >= periodStart && txDate <= periodEnd && t.status !== 'DONE') {
+            return { ...t, status: 'DONE' as const };
+          }
+          return t;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to mark all transactions as done:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to mark all transactions as done';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    }
+  };
+
   return (
-    <SafeArea className="min-h-dvh bg-white dark:bg-black">
-      <Container className="py-4 pb-20">
+    <SafeArea className="h-dvh bg-white dark:bg-black flex flex-col overflow-hidden">
+      <Container className="py-4 pb-32 sm:pb-24 flex-1 overflow-y-auto min-h-0">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             {/* Period Selector Button */}
             <div className="relative inline-block">
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
-                className="appearance-none px-4 py-2 pr-8 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                className="appearance-none px-3 py-1.5 sm:px-4 sm:py-2 pr-7 sm:pr-8 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs sm:text-sm font-medium text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               >
                 <option value="วันนี้">วันนี้</option>
                 <option value="อาทิตย์นี้">อาทิตย์นี้</option>
@@ -574,7 +718,7 @@ export default function DashboardPage() {
                 <option value="ปีนี้">ปีนี้</option>
               </select>
               <svg
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black dark:text-white pointer-events-none"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-black dark:text-white pointer-events-none"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -591,24 +735,24 @@ export default function DashboardPage() {
             {/* Search Icon */}
             <button
               onClick={() => router.push('/dashboard/search')}
-              className="p-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
-              <SearchIcon className="w-5 h-5" />
+              <SearchIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
           {/* Balance - Centered */}
           <div className="text-center">
             {isLoadingStats ? (
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-black dark:text-white">
                 ...
               </h2>
             ) : error ? (
-              <h2 className="text-lg font-medium text-red-600 dark:text-red-400">
+              <h2 className="text-base sm:text-lg font-medium text-red-600 dark:text-red-400">
                 {error}
               </h2>
             ) : (
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-black dark:text-white">
                 ฿{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h2>
             )}
@@ -616,11 +760,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex gap-8 border-b border-gray-200 dark:border-gray-800">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex gap-4 sm:gap-8 border-b border-gray-200 dark:border-gray-800">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`group relative px-4 py-3 text-sm font-semibold transition-all duration-300 ease-in-out ${
+              className={`group relative px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-300 ease-in-out ${
                 activeTab === 'dashboard'
                   ? 'text-black dark:text-white'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -636,7 +780,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('task')}
-              className={`group relative px-4 py-3 text-sm font-semibold transition-all duration-300 ease-in-out ${
+              className={`group relative px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-300 ease-in-out ${
                 activeTab === 'task'
                   ? 'text-black dark:text-white'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -694,11 +838,11 @@ export default function DashboardPage() {
                   
                   {/* View More Button */}
                   {hasMore && (
-                    <div className="mt-6 mb-4 text-center">
+                    <div className="mt-4 sm:mt-6 mb-6 sm:mb-8 text-center">
                       <button
                         onClick={loadMoreTransactions}
                         disabled={isLoadingMore}
-                        className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
                       </button>
@@ -728,22 +872,21 @@ export default function DashboardPage() {
                 <>
                   <TaskList
                     groups={taskGroups}
-                    onDone={(transaction) => {
-                      console.log('Done:', transaction);
-                    }}
-                    onBack={(transaction) => {
-                      console.log('Back:', transaction);
-                    }}
+                    onDone={handleDoneTransaction}
+                    onBack={handleBackTransaction}
                     onDelete={handleDeleteTransaction}
+                    onDoneAllForDate={handleDoneAllForDate}
+                    onDoneAllForPeriod={handleDoneAllForPeriod}
+                    selectedPeriod={selectedPeriod}
                   />
                   
                   {/* View More Button */}
                   {hasMore && (
-                    <div className="mt-6 mb-4 text-center">
+                    <div className="mt-4 sm:mt-6 mb-6 sm:mb-8 text-center">
                       <button
                         onClick={loadMoreTransactions}
                         disabled={isLoadingMore}
-                        className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
                       </button>

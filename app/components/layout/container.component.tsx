@@ -37,6 +37,7 @@ export default function Container({
         ${maxWidthClasses[maxWidth]}
         ${className}
       `}
+      style={{ maxHeight: '100%' }}
     >
       {children}
     </div>
