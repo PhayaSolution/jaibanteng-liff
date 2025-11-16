@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { th } from 'date-fns/locale';
@@ -11,7 +11,7 @@ import TransactionList from '@/app/components/dashboard/transaction-list.compone
 import TaskList from '@/app/components/dashboard/task-list.component';
 import { SearchIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
-import { fetchTransactions, fetchTransactionStats } from '@/app/lib/api';
+import { fetchTransactions, fetchTransactionStats, deleteTransaction } from '@/app/lib/api';
 import { Transaction } from '@/app/lib/types';
 import { getUserSession } from '@/app/utils/storage.util';
 
@@ -305,51 +305,70 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      const session = getUserSession();
-      if (!session?.lineUserId) {
-        setError('Not authenticated');
-        router.push('/splash');
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const { startDate, endDate } = getDateRange(selectedPeriod);
-        
-        const [transactions, stats] = await Promise.all([
-          fetchTransactions(session.lineUserId, {
-            startDate,
-            endDate,
-          }),
-          fetchTransactionStats(session.lineUserId, {
-            startDate,
-            endDate,
-          }),
-        ]);
-
-        setTransactionGroups(transformTransactionsToGroups(transactions));
-        setTaskGroups(transformTransactionsToTaskGroups(transactions));
-        setSpendingData(transformSpendingDataForGraph(stats.spendingData, selectedPeriod));
-        setBalance(stats.balance);
-      } catch (err) {
-        console.error('Failed to load dashboard data:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-        const errorObj = err as { error?: string };
-        setError(errorObj.error || errorMessage);
-        if (errorObj.error?.includes('401') || errorObj.error?.includes('Unauthorized')) {
-          router.push('/splash');
-        }
-      } finally {
-        setIsLoading(false);
-      }
+  const loadData = useCallback(async () => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
     }
 
-    loadData();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { startDate, endDate } = getDateRange(selectedPeriod);
+      
+      const [transactions, stats] = await Promise.all([
+        fetchTransactions(session.lineUserId, {
+          startDate,
+          endDate,
+        }),
+        fetchTransactionStats(session.lineUserId, {
+          startDate,
+          endDate,
+        }),
+      ]);
+
+      setTransactionGroups(transformTransactionsToGroups(transactions));
+      setTaskGroups(transformTransactionsToTaskGroups(transactions));
+      setSpendingData(transformSpendingDataForGraph(stats.spendingData, selectedPeriod));
+      setBalance(stats.balance);
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+      const errorObj = err as { error?: string };
+      setError(errorObj.error || errorMessage);
+      if (errorObj.error?.includes('401') || errorObj.error?.includes('Unauthorized')) {
+        router.push('/splash');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedPeriod, router]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleDeleteTransaction = async (transaction: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      await deleteTransaction(session.lineUserId, transaction.id);
+      // Reload data after deletion
+      await loadData();
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete transaction';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    }
+  };
 
   return (
     <SafeArea className="min-h-dvh bg-white dark:bg-black">
@@ -479,6 +498,7 @@ export default function DashboardPage() {
                     onTransactionClick={(transaction) => {
                       console.log('Transaction clicked:', transaction);
                     }}
+                    onDelete={handleDeleteTransaction}
                   />
                   
                   {/* View More Button */}
@@ -509,6 +529,7 @@ export default function DashboardPage() {
                     onBack={(transaction) => {
                       console.log('Back:', transaction);
                     }}
+                    onDelete={handleDeleteTransaction}
                   />
                   
                   {/* View More Button */}

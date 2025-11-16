@@ -24,9 +24,10 @@ interface TransactionGroup {
 interface TransactionListProps {
   groups: TransactionGroup[];
   onTransactionClick?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
 }
 
-export default function TransactionList({ groups, onTransactionClick }: TransactionListProps) {
+export default function TransactionList({ groups, onTransactionClick, onDelete }: TransactionListProps) {
   return (
     <div className="space-y-6">
       {groups.map((group, groupIndex) => (
@@ -96,8 +97,7 @@ export default function TransactionList({ groups, onTransactionClick }: Transact
               return (
                 <div
                   key={transaction.id}
-                  onClick={() => onTransactionClick?.(transaction)}
-                  className="flex items-center gap-3 py-2 cursor-pointer"
+                  className="flex items-center gap-3 py-2"
                 >
                   {/* Emoji Icon */}
                   <div className="flex-shrink-0 text-2xl">
@@ -105,7 +105,10 @@ export default function TransactionList({ groups, onTransactionClick }: Transact
                   </div>
                   
                   {/* Category and Tags */}
-                  <div className="flex-1 min-w-0">
+                  <div 
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => onTransactionClick?.(transaction)}
+                  >
                     <p className="text-base font-bold text-black dark:text-white mb-1">
                       {categoryDisplay}
                     </p>
@@ -122,10 +125,28 @@ export default function TransactionList({ groups, onTransactionClick }: Transact
                   </div>
                   
                   {/* Amount */}
-                  <div className="flex-shrink-0 text-right">
+                  <div 
+                    className="flex-shrink-0 text-right cursor-pointer"
+                    onClick={() => onTransactionClick?.(transaction)}
+                  >
                     <span className={`text-base font-bold ${amountColor}`}>
                       {transaction.type === 'income' ? '+' : '-'}฿{transaction.amount.toLocaleString()}
                     </span>
+                  </div>
+
+                  {/* Delete button */}
+                  <div className="flex-shrink-0 ml-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+                          onDelete?.(transaction);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700 transition-colors"
+                    >
+                      ลบ
+                    </button>
                   </div>
                 </div>
               );

@@ -26,9 +26,10 @@ interface TaskListProps {
   groups: TransactionGroup[];
   onDone?: (transaction: Transaction) => void;
   onBack?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
 }
 
-export default function TaskList({ groups, onDone, onBack }: TaskListProps) {
+export default function TaskList({ groups, onDone, onBack, onDelete }: TaskListProps) {
   return (
     <div className="space-y-6">
       {groups.map((group, groupIndex) => (
@@ -165,6 +166,17 @@ export default function TaskList({ groups, onDone, onBack }: TaskListProps) {
                         Back
                       </button>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+                          onDelete?.(transaction);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-md bg-gray-600 text-white text-xs font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      ลบ
+                    </button>
                   </div>
                 </div>
               );
