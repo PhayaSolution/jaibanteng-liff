@@ -144,7 +144,7 @@ export default function CategoryTags({
               </span>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 shadow-none border-none" align="start">
+          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 border border-gray-300 shadow-lg bg-white" align="start">
             <div className="max-h-[300px] overflow-y-auto">
               {categories.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
@@ -206,7 +206,7 @@ export default function CategoryTags({
             <span className="text-sm">Select tag</span>
           </button>
         </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 shadow-none border-none" align="start">
+          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 border border-gray-300 shadow-lg bg-white" align="start">
             <div className="max-h-[300px] flex flex-col">
               {/* Add New Tag Input */}
               <div className="mb-3 pb-3 border-b border-gray-200">
