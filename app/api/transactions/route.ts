@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { getLineUserIdFromHeaders, getUserByLineUserId } from '@/app/lib/auth';
-import { TransactionType, TransactionStatus } from '@/app/lib/types';
+import { TransactionType, TransactionStatus, Tag } from '@/app/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +31,12 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
 
-    const where: any = {
+    const where: {
+      userId: string;
+      type?: TransactionType;
+      status?: TransactionStatus;
+      date?: { gte?: Date; lte?: Date };
+    } = {
       userId: user.id,
     };
 
@@ -69,7 +74,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the response to include tags as an array
-    const transformedTransactions = transactions.map((transaction) => ({
+    const transformedTransactions = transactions.map((transaction: typeof transactions[0]) => ({
       ...transaction,
       tags: transaction.tags.map((tt) => tt.tag),
     }));

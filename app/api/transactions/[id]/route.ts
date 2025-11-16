@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { getLineUserIdFromHeaders, getUserByLineUserId } from '@/app/lib/auth';
-import { TransactionType, TransactionStatus } from '@/app/lib/types';
+import { TransactionType, TransactionStatus, Tag } from '@/app/lib/types';
 
 export async function PUT(
   request: NextRequest,
