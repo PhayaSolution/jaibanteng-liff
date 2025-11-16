@@ -138,16 +138,6 @@ function Calendar({
             />
           )
         },
-        IconLeft: ({ className, ...props }) => {
-          return (
-            <ChevronLeft className={cn("size-4 text-foreground", className)} {...props} />
-          )
-        },
-        IconRight: ({ className, ...props }) => {
-          return (
-            <ChevronRight className={cn("size-4 text-foreground", className)} {...props} />
-          )
-        },
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
