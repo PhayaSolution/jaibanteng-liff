@@ -4,16 +4,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { addCategory } from '@/app/utils/storage.util';
+import { createCategory } from '@/app/lib/api';
 import { EmojiPicker } from '@/app/components/ui/emoji-picker';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function AddCategoryPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -21,18 +23,27 @@ export default function AddCategoryPage() {
       return;
     }
 
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      addCategory({
+      await createCategory(session.lineUserId, {
         name: name.trim(),
-        emoji: emoji.trim(),
+        emoji: emoji.trim() || undefined,
       });
       
       router.push('/settings/category');
-    } catch (error) {
-      console.error('Failed to add category:', error);
-      alert('Failed to add category. Please try again.');
+    } catch (err: any) {
+      console.error('Failed to add category:', err);
+      setError(err.error || 'Failed to add category');
+      alert(err.error || 'Failed to add category. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

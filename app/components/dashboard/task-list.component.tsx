@@ -1,19 +1,18 @@
 'use client';
 
-const emojiMap = {
-  pet: '🐶',
-  coffee: '☕',
-  food: '🥙',
-  oil: '🛢️',
-};
+import { format } from 'date-fns';
+import { th } from 'date-fns/locale';
 
 interface Transaction {
   id: string;
   category: string;
+  categoryEmoji?: string | null;
   name: string;
   amount: number;
   type: 'income' | 'expense';
-  icon?: 'pet' | 'coffee' | 'food' | 'oil';
+  tags?: string[];
+  createdAt?: string;
+  date?: string;
   status?: 'done' | 'back';
 }
 
@@ -66,7 +65,51 @@ export default function TaskList({ groups, onDone, onBack }: TaskListProps) {
                 return aText.localeCompare(bText);
               })
               .map((transaction) => {
-              const emoji = transaction.icon ? emojiMap[transaction.icon] : '🥙';
+              const categoryEmoji = transaction.categoryEmoji || '📁';
+              const categoryDisplay = transaction.categoryEmoji 
+                ? `${categoryEmoji} ${transaction.category}`
+                : transaction.category;
+              const tagsDisplay = transaction.tags && transaction.tags.length > 0
+                ? transaction.tags.join(', ')
+                : transaction.name;
+              
+              // Format time from date field (or createdAt if date has no time)
+              let timeDisplay = '';
+              if (transaction.date) {
+                try {
+                  const dateObj = new Date(transaction.date);
+                  const timeFromDate = format(dateObj, 'HH:mm', { locale: th });
+                  
+                  // If date has no time (00:00), use createdAt instead
+                  if (timeFromDate === '00:00' && transaction.createdAt) {
+                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                  } else {
+                    timeDisplay = timeFromDate;
+                  }
+                } catch (e) {
+                  console.error('Error formatting date time:', e, transaction.date);
+                  // Fallback to createdAt if date parsing fails
+                  if (transaction.createdAt) {
+                    try {
+                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                    } catch (e2) {
+                      console.error('Error formatting createdAt:', e2);
+                    }
+                  }
+                }
+              } else if (transaction.createdAt) {
+                // Fallback to createdAt if no date
+                try {
+                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                } catch (e) {
+                  console.error('Error formatting createdAt:', e);
+                }
+              }
+              
+              const amountColor = transaction.type === 'income' 
+                ? 'text-green-600 dark:text-green-400' 
+                : 'text-red-600 dark:text-red-400';
+              
               const showDone = transaction.status === 'done' || !transaction.status;
               const showBack = transaction.status === 'back';
 
@@ -77,23 +120,30 @@ export default function TaskList({ groups, onDone, onBack }: TaskListProps) {
                 >
                   {/* Emoji Icon */}
                   <div className="flex-shrink-0 text-2xl">
-                    {emoji}
+                    {categoryEmoji}
                   </div>
                   
-                  {/* Category and Name */}
+                  {/* Category and Tags */}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-base font-bold text-black dark:text-white ${showBack ? 'line-through' : ''}`}>
-                      {transaction.category}
+                    <p className={`text-base font-bold text-black dark:text-white mb-1 ${showBack ? 'line-through' : ''}`}>
+                      {categoryDisplay}
                     </p>
-                    <p className={`text-sm text-gray-500 dark:text-gray-400 ${showBack ? 'line-through' : ''}`}>
-                      {transaction.name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm text-gray-500 dark:text-gray-400 ${showBack ? 'line-through' : ''}`}>
+                        {tagsDisplay}
+                      </p>
+                      {timeDisplay && (
+                        <span className={`text-xs text-gray-400 dark:text-gray-500 ${showBack ? 'line-through' : ''}`}>
+                          {timeDisplay}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
                   {/* Amount */}
-                  <div className="flex-shrink-0">
-                    <span className={`text-base font-bold text-black dark:text-white ${showBack ? 'line-through' : ''}`}>
-                      ฿{transaction.amount.toLocaleString()}
+                  <div className="flex-shrink-0 text-right">
+                    <span className={`text-base font-bold ${showBack ? 'line-through' : ''} ${amountColor}`}>
+                      {transaction.type === 'income' ? '+' : '-'}฿{transaction.amount.toLocaleString()}
                     </span>
                   </div>
 

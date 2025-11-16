@@ -4,24 +4,51 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { getProfile, updateProfile, type Profile } from '@/app/utils/storage.util';
-import { EmojiPicker } from '@/app/components/ui/emoji-picker';
+import { fetchCurrentUser } from '@/app/lib/api';
+import { User } from '@/app/lib/types';
+import { getUserSession, saveUserSession } from '@/app/utils/storage.util';
 
 export default function EditProfilePage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [avatar, setAvatar] = useState('');
+  const [pictureUrl, setPictureUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const currentProfile = getProfile();
-    setProfile(currentProfile);
-    setName(currentProfile.name);
-    setAvatar(currentProfile.avatar || '');
-  }, []);
+    async function loadUser() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const userData = await fetchCurrentUser(session.lineUserId);
+        setUser(userData);
+        setName(userData.displayName);
+        setPictureUrl(userData.pictureUrl || '');
+      } catch (err: any) {
+        console.error('Failed to load user:', err);
+        setError(err.error || 'Failed to load user');
+        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadUser();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -29,25 +56,64 @@ export default function EditProfilePage() {
       return;
     }
 
+    // Note: The API doesn't currently support updating user profile
+    // For now, we'll update the local session to reflect the change
+    // In the future, you may want to add a PATCH endpoint to /api/users/me
+    
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      updateProfile({
-        name: name.trim(),
-        avatar: avatar.trim() || undefined,
-      });
+      // Update local session
+      const updatedSession = {
+        ...session,
+        displayName: name.trim(),
+        pictureUrl: pictureUrl.trim() || undefined,
+      };
+      saveUserSession(updatedSession);
+      
+      // TODO: If you add a PATCH endpoint to /api/users/me, call it here:
+      // await updateUser(session.lineUserId, { displayName: name.trim(), pictureUrl: pictureUrl.trim() || undefined });
       
       router.push('/settings');
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to update profile. Please try again.');
+    } catch (err: any) {
+      console.error('Failed to update profile:', err);
+      setError(err.error || 'Failed to update profile');
+      alert(err.error || 'Failed to update profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!profile) {
-    return null;
+  if (isLoading) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error || 'User not found'}</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
   }
 
   return (
@@ -85,8 +151,14 @@ export default function EditProfilePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Avatar Preview */}
           <div className="flex flex-col items-center mb-6">
-            <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 text-4xl">
-              {avatar || (
+            {pictureUrl ? (
+              <img
+                src={pictureUrl}
+                alt={name}
+                className="w-24 h-24 rounded-full object-cover mb-4"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 text-4xl">
                 <svg
                   className="w-12 h-12 text-gray-400 dark:text-gray-600"
                   fill="none"
@@ -100,8 +172,8 @@ export default function EditProfilePage() {
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   />
                 </svg>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Name Field */}
@@ -123,21 +195,24 @@ export default function EditProfilePage() {
             />
           </div>
 
-          {/* Avatar Field */}
+          {/* Picture URL Field */}
           <div>
             <label
-              htmlFor="avatar"
+              htmlFor="pictureUrl"
               className="block text-sm font-medium text-black dark:text-white mb-2"
             >
-              Avatar (Emoji)
+              Picture URL
             </label>
-            <EmojiPicker
-              value={avatar}
-              onChange={setAvatar}
-              placeholder="Select emoji"
+            <input
+              id="pictureUrl"
+              type="text"
+              value={pictureUrl}
+              onChange={(e) => setPictureUrl(e.target.value)}
+              placeholder="Enter picture URL"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
             />
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Optional: Add an emoji as your avatar
+              Optional: Enter a URL for your profile picture
             </p>
           </div>
 

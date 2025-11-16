@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { LiffProvider } from "./providers/liff-provider";
+import { VConsoleProvider } from "./providers/vconsole-provider";
 
 export const metadata: Metadata = {
   title: "Jai Banteng - Your Minimal Budgeting App",
@@ -36,9 +38,18 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="theme-color" content="#ffffff" />
+
+  {/* Cache Control Meta Tags */}
+  <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta httpEquiv="Pragma" content="no-cache" />
+  <meta httpEquiv="Expires" content="0" />
       </head>
-      <body className="antialiased">
-        {children}
+      <body className="antialiased" suppressHydrationWarning>
+        <LiffProvider>
+          <VConsoleProvider>
+            {children}
+          </VConsoleProvider>
+        </LiffProvider>
       </body>
     </html>
   );

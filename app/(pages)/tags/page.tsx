@@ -4,26 +4,70 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { getTags, deleteTag, type Tag } from '@/app/utils/storage.util';
+import { fetchTags, deleteTag } from '@/app/lib/api';
+import { Tag } from '@/app/lib/types';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function TagsPage() {
   const router = useRouter();
   const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setTags(getTags());
-  }, []);
+    async function loadTags() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchTags(session.lineUserId);
+        setTags(data);
+      } catch (err: any) {
+        console.error('Failed to load tags:', err);
+        setError(err.error || 'Failed to load tags');
+        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadTags();
+  }, [router]);
 
   const filteredTags = tags.filter((tag) =>
     tag.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDeleteTag = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete "${name}"?`)) {
-      if (deleteTag(id)) {
-        setTags(getTags());
-      }
+  const handleDeleteTag = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+      return;
+    }
+
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
+    try {
+      await deleteTag(session.lineUserId, id);
+      // Reload tags
+      const data = await fetchTags(session.lineUserId);
+      setTags(data);
+    } catch (err: any) {
+      console.error('Failed to delete tag:', err);
+      alert(err.error || 'Failed to delete tag');
     }
   };
 
@@ -82,8 +126,17 @@ export default function TagsPage() {
         </div>
 
         {/* Tags List */}
-        <div className="space-y-2">
-          {filteredTags.map((tag) => (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredTags.map((tag) => (
             <div
               key={tag.id}
               className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
@@ -132,10 +185,11 @@ export default function TagsPage() {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredTags.length === 0 && (
+        {!isLoading && !error && filteredTags.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
               {searchQuery ? 'No tags found' : 'No tags yet. Add your first tag!'}

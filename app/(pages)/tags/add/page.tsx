@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { addTag } from '@/app/utils/storage.util';
+import { createTag } from '@/app/lib/api';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function AddTagPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -19,17 +21,26 @@ export default function AddTagPage() {
       return;
     }
 
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      addTag({
+      await createTag(session.lineUserId, {
         name: name.trim(),
       });
       
       router.push('/tags');
-    } catch (error) {
-      console.error('Failed to add tag:', error);
-      alert('Failed to add tag. Please try again.');
+    } catch (err: any) {
+      console.error('Failed to add tag:', err);
+      setError(err.error || 'Failed to add tag');
+      alert(err.error || 'Failed to add tag. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -109,4 +120,5 @@ export default function AddTagPage() {
     </SafeArea>
   );
 }
+
 

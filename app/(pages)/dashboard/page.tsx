@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { th } from 'date-fns/locale';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
 import SpendingGraph from '@/app/components/dashboard/spending-graph.component';
@@ -9,175 +11,345 @@ import TransactionList from '@/app/components/dashboard/transaction-list.compone
 import TaskList from '@/app/components/dashboard/task-list.component';
 import { SearchIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
+import { fetchTransactions, fetchTransactionStats } from '@/app/lib/api';
+import { Transaction } from '@/app/lib/types';
+import { getUserSession } from '@/app/utils/storage.util';
 
 type TabType = 'dashboard' | 'task';
 type PeriodType = 'วันนี้' | 'อาทิตย์นี้' | 'เดือนนี้' | 'ปีนี้';
 
-// Mock data for different periods
-const getSpendingData = (period: PeriodType) => {
+interface TransactionGroup {
+  date: string;
+  total: number;
+  transactions: Array<{
+    id: string;
+    category: string;
+    categoryEmoji?: string | null;
+    name: string;
+    amount: number;
+    type: 'income' | 'expense';
+    tags?: string[];
+    createdAt?: string;
+    date?: string;
+  }>;
+}
+
+interface TaskGroup {
+  date: string;
+  total: number;
+  transactions: Array<{
+    id: string;
+    category: string;
+    categoryEmoji?: string | null;
+    name: string;
+    amount: number;
+    type: 'income' | 'expense';
+    tags?: string[];
+    createdAt?: string;
+    date?: string;
+    status: 'done' | 'back';
+  }>;
+}
+
+// Helper to get date range for period
+function getDateRange(period: PeriodType): { startDate: string; endDate: string } {
+  const now = new Date();
+  let start: Date;
+  let end: Date = endOfDay(now);
+
   switch (period) {
     case 'วันนี้':
-      // Hourly data for today (24 hours)
-      return [
-        { month: '00', value: 20 },
-        { month: '06', value: 15 },
-        { month: '12', value: 45 },
-        { month: '18', value: 30 },
-        { month: '24', value: 25 },
-      ];
+      start = startOfDay(now);
+      break;
     case 'อาทิตย์นี้':
-      // Daily data for this week (7 days)
-      return [
-        { month: 'จ', value: 120 },
-        { month: 'อ', value: 150 },
-        { month: 'พ', value: 100 },
-        { month: 'พฤ', value: 180 },
-        { month: 'ศ', value: 140 },
-        { month: 'ส', value: 200 },
-        { month: 'อา', value: 160 },
-      ];
+      start = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+      end = endOfWeek(now, { weekStartsOn: 1 });
+      break;
     case 'เดือนนี้':
-      // Weekly data for this month (4-5 weeks)
-      return [
-        { month: 'wk1', value: 450 },
-        { month: 'wk2', value: 520 },
-        { month: 'wk3', value: 480 },
-        { month: 'wk4', value: 550 },
-      ];
+      start = startOfMonth(now);
+      end = endOfMonth(now);
+      break;
     case 'ปีนี้':
-      // Monthly data for this year (12 months)
-      return [
-        { month: 'ม.ค.', value: 1200 },
-        { month: 'ก.พ.', value: 1500 },
-        { month: 'มี.ค.', value: 1300 },
-        { month: 'เม.ย.', value: 1400 },
-        { month: 'พ.ค.', value: 1600 },
-        { month: 'มิ.ย.', value: 1450 },
-        { month: 'ก.ค.', value: 1700 },
-        { month: 'ส.ค.', value: 1550 },
-        { month: 'ก.ย.', value: 1800 },
-        { month: 'ต.ค.', value: 1650 },
-        { month: 'พ.ย.', value: 1750 },
-        { month: 'ธ.ค.', value: 1900 },
-      ];
+      start = startOfYear(now);
+      end = endOfYear(now);
+      break;
     default:
-      return [
-        { month: 'jul', value: 50 },
-        { month: 'aug', value: 70 },
-        { month: 'sep', value: 60 },
-        { month: 'oct', value: 80 },
-        { month: 'nov', value: 65 },
-        { month: 'dec', value: 75 },
-      ];
+      start = startOfDay(now);
   }
-};
 
-const transactionGroups = [
-  {
-    date: '28/10/2568',
-    total: 300,
-    transactions: [
-      {
-        id: '1',
-        category: 'Pet Care',
-        name: 'petco',
-        amount: 190,
-        type: 'expense' as const,
-        icon: 'pet' as const,
-      },
-      {
-        id: '2',
-        category: 'Coffee',
-        name: 'Amazon',
-        amount: 80,
-        type: 'expense' as const,
-        icon: 'coffee' as const,
-      },
-      {
-        id: '3',
-        category: 'Food',
-        name: 'Salad',
-        amount: 59,
-        type: 'expense' as const,
-        icon: 'food' as const,
-      },
-      {
-        id: '4',
-        category: 'Oil',
-        name: 'gas sohal 95',
-        amount: 1000,
-        type: 'expense' as const,
-        icon: 'oil' as const,
-      },
-    ],
-  },
-  {
-    date: '27/10/2568',
-    total: 300,
-    transactions: [
-      {
-        id: '5',
-        category: 'Food',
-        name: 'Salad',
-        amount: 120,
-        type: 'expense' as const,
-        icon: 'food' as const,
-      },
-    ],
-  },
-];
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+  };
+}
 
-const taskGroups = [
-  {
-    date: '28/10/2568',
-    total: 300,
-    transactions: [
-      {
-        id: '1',
-        category: 'Pet Care',
-        name: 'petco',
-        amount: 190,
-        type: 'expense' as const,
-        icon: 'pet' as const,
-        status: 'done' as const,
-      },
-      {
-        id: '2',
-        category: 'Coffee',
-        name: 'Amazon',
-        amount: 80,
-        type: 'expense' as const,
-        icon: 'coffee' as const,
-        status: 'back' as const,
-      },
-      {
-        id: '3',
-        category: 'Food',
-        name: 'Salad',
-        amount: 59,
-        type: 'expense' as const,
-        icon: 'food' as const,
-        status: 'done' as const,
-      },
-      {
-        id: '4',
-        category: 'Oil',
-        name: 'gas sohal 95',
-        amount: 1000,
-        type: 'expense' as const,
-        icon: 'oil' as const,
-        status: 'back' as const,
-      },
-    ],
-  },
-];
+// Transform transactions to groups
+function transformTransactionsToGroups(transactions: Transaction[]): TransactionGroup[] {
+  const groupsMap = new Map<string, TransactionGroup>();
+
+  transactions.forEach((tx) => {
+    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+    
+    if (!groupsMap.has(date)) {
+      groupsMap.set(date, {
+        date,
+        total: 0,
+        transactions: [],
+      });
+    }
+
+    const group = groupsMap.get(date)!;
+    const amount = parseFloat(tx.amount);
+    const isIncome = tx.type === 'INCOME';
+    
+    group.total += isIncome ? amount : -amount;
+    
+    group.transactions.push({
+      id: tx.id,
+      category: tx.category?.name || 'Uncategorized',
+      categoryEmoji: tx.category?.emoji || null,
+      name: tx.name,
+      amount,
+      type: isIncome ? 'income' : 'expense',
+      tags: tx.tags && tx.tags.length > 0 
+        ? tx.tags.map(tag => `#${tag.name}`)
+        : undefined,
+      createdAt: tx.createdAt,
+      date: tx.date,
+    });
+  });
+
+  // Sort by date descending
+  return Array.from(groupsMap.values()).sort((a, b) => {
+    const dateA = new Date(a.date.split('/').reverse().join('-'));
+    const dateB = new Date(b.date.split('/').reverse().join('-'));
+    return dateB.getTime() - dateA.getTime();
+  });
+}
+
+// Transform transactions to task groups (filter by status BACK)
+function transformTransactionsToTaskGroups(transactions: Transaction[]): TaskGroup[] {
+  const backTransactions = transactions.filter((tx) => tx.status === 'BACK');
+  const groupsMap = new Map<string, TaskGroup>();
+
+  backTransactions.forEach((tx) => {
+    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+    
+    if (!groupsMap.has(date)) {
+      groupsMap.set(date, {
+        date,
+        total: 0,
+        transactions: [],
+      });
+    }
+
+    const group = groupsMap.get(date)!;
+    const amount = parseFloat(tx.amount);
+    const isIncome = tx.type === 'INCOME';
+    
+    group.total += isIncome ? amount : -amount;
+    
+    group.transactions.push({
+      id: tx.id,
+      category: tx.category?.name || 'Uncategorized',
+      categoryEmoji: tx.category?.emoji || null,
+      name: tx.name,
+      amount,
+      type: isIncome ? 'income' : 'expense',
+      tags: tx.tags && tx.tags.length > 0 
+        ? tx.tags.map(tag => `#${tag.name}`)
+        : undefined,
+      createdAt: tx.createdAt,
+      date: tx.date,
+      status: 'back',
+    });
+  });
+
+  return Array.from(groupsMap.values()).sort((a, b) => {
+    const dateA = new Date(a.date.split('/').reverse().join('-'));
+    const dateB = new Date(b.date.split('/').reverse().join('-'));
+    return dateB.getTime() - dateA.getTime();
+  });
+}
+
+// Transform stats spending data for graph
+function transformSpendingDataForGraph(
+  spendingData: Array<{ date: string; income: number; expense: number; total: number }>,
+  period: PeriodType
+): Array<{ month: string; value: number }> {
+  if (spendingData.length === 0) {
+    return [{ month: '-', value: 0 }];
+  }
+
+  switch (period) {
+    case 'วันนี้': {
+      // For today, show all 24 hours (0-23)
+      // Convert ISO date strings from API to local timezone and group by hour
+      const hourMap = new Map<number, number>();
+      
+      spendingData.forEach((item) => {
+        // Parse ISO date string and convert to local timezone
+        const date = new Date(item.date);
+        const hour = date.getHours(); // Local timezone hour
+        
+        // Aggregate income and expense for this hour
+        const currentValue = hourMap.get(hour) || 0;
+        hourMap.set(hour, currentValue + (item.income - item.expense));
+      });
+      
+      const result: Array<{ month: string; value: number }> = [];
+      
+      // Show all 24 hours (0-23)
+      for (let h = 0; h <= 23; h++) {
+        const nextHour = h + 1;
+        // For the last hour (23), show "23-24" instead of "23-00"
+        const label = nextHour === 24 
+          ? `${h.toString().padStart(2, '0')}-24`
+          : `${h.toString().padStart(2, '0')}-${nextHour.toString().padStart(2, '0')}`;
+        result.push({
+          month: label,
+          value: hourMap.get(h) || 0,
+        });
+      }
+      
+      return result;
+    }
+    case 'อาทิตย์นี้': {
+      // Fill in missing days of the week and aggregate balance by day name
+      const now = new Date();
+      const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+      const dataMap = new Map<string, number>();
+      
+      spendingData.forEach((item) => {
+        const dateKey = format(new Date(item.date), 'EEE', { locale: th });
+        const currentValue = dataMap.get(dateKey) || 0;
+        dataMap.set(dateKey, currentValue + (item.income - item.expense));
+      });
+      
+      const result: Array<{ month: string; value: number }> = [];
+      for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
+        const dayKey = format(d, 'EEE', { locale: th });
+        result.push({
+          month: dayKey,
+          value: dataMap.get(dayKey) || 0,
+        });
+      }
+      return result;
+    }
+    case 'เดือนนี้': {
+      // Fill in missing days of the month and aggregate balance by day number
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const dataMap = new Map<string, number>();
+      
+      spendingData.forEach((item) => {
+        const dateKey = format(new Date(item.date), 'd', { locale: th });
+        const currentValue = dataMap.get(dateKey) || 0;
+        dataMap.set(dateKey, currentValue + (item.income - item.expense));
+      });
+      
+      const result: Array<{ month: string; value: number }> = [];
+      for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
+        const dayKey = format(d, 'd', { locale: th });
+        result.push({
+          month: dayKey,
+          value: dataMap.get(dayKey) || 0,
+        });
+      }
+      return result;
+    }
+    case 'ปีนี้': {
+      // Group by month and aggregate balance, fill in missing months
+      const now = new Date();
+      const yearStart = startOfYear(now);
+      const yearEnd = endOfYear(now);
+      const dataMap = new Map<string, number>();
+      
+      spendingData.forEach((item) => {
+        const monthKey = format(new Date(item.date), 'MMM', { locale: th });
+        const currentValue = dataMap.get(monthKey) || 0;
+        dataMap.set(monthKey, currentValue + (item.income - item.expense));
+      });
+      
+      const result: Array<{ month: string; value: number }> = [];
+      for (let d = new Date(yearStart); d <= yearEnd; d.setMonth(d.getMonth() + 1)) {
+        const monthKey = format(d, 'MMM', { locale: th });
+        result.push({
+          month: monthKey,
+          value: dataMap.get(monthKey) || 0,
+        });
+      }
+      return result;
+    }
+    default:
+      return spendingData.map((item) => {
+        const date = new Date(item.date);
+        return {
+          month: format(date, 'MMM', { locale: th }),
+          value: item.income - item.expense,
+        };
+      });
+  }
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('วันนี้');
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  
-  const spendingData = getSpendingData(selectedPeriod);
+  const [transactionGroups, setTransactionGroups] = useState<TransactionGroup[]>([]);
+  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([]);
+  const [spendingData, setSpendingData] = useState<Array<{ month: string; value: number }>>([]);
+  const [balance, setBalance] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { startDate, endDate } = getDateRange(selectedPeriod);
+        
+        const [transactions, stats] = await Promise.all([
+          fetchTransactions(session.lineUserId, {
+            startDate,
+            endDate,
+          }),
+          fetchTransactionStats(session.lineUserId, {
+            startDate,
+            endDate,
+          }),
+        ]);
+
+        setTransactionGroups(transformTransactionsToGroups(transactions));
+        setTaskGroups(transformTransactionsToTaskGroups(transactions));
+        setSpendingData(transformSpendingDataForGraph(stats.spendingData, selectedPeriod));
+        setBalance(stats.balance);
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+        const errorObj = err as { error?: string };
+        setError(errorObj.error || errorMessage);
+        if (errorObj.error?.includes('401') || errorObj.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, [selectedPeriod, router]);
 
   return (
     <SafeArea className="min-h-dvh bg-white dark:bg-black">
@@ -223,9 +395,19 @@ export default function DashboardPage() {
 
           {/* Balance - Centered */}
           <div className="text-center">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
-              ฿300.00
-            </h2>
+            {isLoading ? (
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
+                ...
+              </h2>
+            ) : error ? (
+              <h2 className="text-lg font-medium text-red-600 dark:text-red-400">
+                {error}
+              </h2>
+            ) : (
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
+                ฿{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h2>
+            )}
           </div>
         </div>
 
@@ -268,55 +450,79 @@ export default function DashboardPage() {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'dashboard' ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        ) : activeTab === 'dashboard' ? (
           <>
             {/* Spending Graph - Full Width on Desktop, Scrollable on Mobile */}
             <div className="mb-4 -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-8 overflow-x-auto lg:overflow-x-visible scroll-smooth">
               <div className="w-full min-w-[800px] lg:min-w-full">
                 <SpendingGraph 
                   data={spendingData} 
-                  currentMonthIndex={selectedPeriod === 'วันนี้' ? 4 : selectedPeriod === 'อาทิตย์นี้' ? 6 : selectedPeriod === 'เดือนนี้' ? 3 : 11} 
+                  currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
                 />
               </div>
             </div>
 
             {/* Transaction List */}
             <div>
-              <TransactionList
-                groups={transactionGroups}
-                onTransactionClick={(transaction) => {
-                  console.log('Transaction clicked:', transaction);
-                }}
-              />
-              
-              {/* View More Button */}
-              <div className="mt-6 mb-4 text-center">
-                <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                  ดูเพิ่มเติม
-                </button>
-              </div>
+              {transactionGroups.length > 0 ? (
+                <>
+                  <TransactionList
+                    groups={transactionGroups}
+                    onTransactionClick={(transaction) => {
+                      console.log('Transaction clicked:', transaction);
+                    }}
+                  />
+                  
+                  {/* View More Button */}
+                  <div className="mt-6 mb-4 text-center">
+                    <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                      ดูเพิ่มเติม
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">ไม่มีรายการธุรกรรม</p>
+                </div>
+              )}
             </div>
           </>
         ) : (
           <>
             {/* Task List */}
             <div>
-              <TaskList
-                groups={taskGroups}
-                onDone={(transaction) => {
-                  console.log('Done:', transaction);
-                }}
-                onBack={(transaction) => {
-                  console.log('Back:', transaction);
-                }}
-              />
-              
-              {/* View More Button */}
-              <div className="mt-6 mb-4 text-center">
-                <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                  ดูเพิ่มเติม
-                </button>
-              </div>
+              {taskGroups.length > 0 ? (
+                <>
+                  <TaskList
+                    groups={taskGroups}
+                    onDone={(transaction) => {
+                      console.log('Done:', transaction);
+                    }}
+                    onBack={(transaction) => {
+                      console.log('Back:', transaction);
+                    }}
+                  />
+                  
+                  {/* View More Button */}
+                  <div className="mt-6 mb-4 text-center">
+                    <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+                      ดูเพิ่มเติม
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">ไม่มีรายการงาน</p>
+                </div>
+              )}
             </div>
           </>
         )}

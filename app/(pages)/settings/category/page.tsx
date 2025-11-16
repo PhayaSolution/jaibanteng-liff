@@ -4,26 +4,70 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { getCategories, deleteCategory, type Category } from '@/app/utils/storage.util';
+import { fetchCategories, deleteCategory } from '@/app/lib/api';
+import { Category } from '@/app/lib/types';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function CategoryPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setCategories(getCategories());
-  }, []);
+    async function loadCategories() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchCategories(session.lineUserId);
+        setCategories(data);
+      } catch (err: any) {
+        console.error('Failed to load categories:', err);
+        setError(err.error || 'Failed to load categories');
+        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadCategories();
+  }, [router]);
 
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete "${name}"?`)) {
-      if (deleteCategory(id)) {
-        setCategories(getCategories());
-      }
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+      return;
+    }
+
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
+    try {
+      await deleteCategory(session.lineUserId, id);
+      // Reload categories
+      const data = await fetchCategories(session.lineUserId);
+      setCategories(data);
+    } catch (err: any) {
+      console.error('Failed to delete category:', err);
+      alert(err.error || 'Failed to delete category');
     }
   };
 
@@ -82,8 +126,17 @@ export default function CategoryPage() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {filteredCategories.map((category) => (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {filteredCategories.map((category) => (
             <div
               key={category.id}
               className="relative flex flex-col items-center justify-center gap-3 p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -144,10 +197,11 @@ export default function CategoryPage() {
                 {category.name}
               </span>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredCategories.length === 0 && (
+        {!isLoading && !error && filteredCategories.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
               {searchQuery ? 'No categories found' : 'No categories yet. Add your first category!'}

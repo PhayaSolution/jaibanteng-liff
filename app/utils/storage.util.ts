@@ -160,3 +160,58 @@ export function updateProfile(updates: Partial<Profile>): Profile {
   return updatedProfile;
 }
 
+// User session utilities
+const USER_SESSION_KEY = 'user_session';
+
+export interface UserSession {
+  id: string;
+  lineUserId: string;
+  displayName: string;
+  pictureUrl?: string;
+  email?: string;
+  phoneNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function getUserSession(): UserSession | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem(USER_SESSION_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('[Storage Debug] Failed to get user session:', error);
+    return null;
+  }
+}
+
+export function saveUserSession(session: UserSession): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    console.log('[Storage Debug] Saving user session:', { userId: session.lineUserId, displayName: session.displayName });
+    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+    console.log('[Storage Debug] ✅ User session saved');
+  } catch (error) {
+    console.error('[Storage Debug] ❌ Failed to save user session:', error);
+  }
+}
+
+export function clearUserSession(): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    console.log('[Storage Debug] Clearing user session...');
+    localStorage.removeItem(USER_SESSION_KEY);
+    console.log('[Storage Debug] ✅ User session cleared');
+  } catch (error) {
+    console.error('[Storage Debug] ❌ Failed to clear user session:', error);
+  }
+}
+
+export function isUserLoggedIn(): boolean {
+  const session = getUserSession();
+  return !!session;
+}
+

@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { getTags, updateTag, type Tag } from '@/app/utils/storage.util';
+import { fetchTags, updateTag } from '@/app/lib/api';
+import { Tag } from '@/app/lib/types';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function EditTagPage() {
   const router = useRouter();
@@ -14,21 +16,47 @@ export default function EditTagPage() {
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tag, setTag] = useState<Tag | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const tags = getTags();
-    const foundTag = tags.find(t => t.id === id);
-    
-    if (foundTag) {
-      setTag(foundTag);
-      setName(foundTag.name);
-    } else {
-      alert('Tag not found');
-      router.push('/tags');
+    async function loadTag() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const tags = await fetchTags(session.lineUserId);
+        const foundTag = tags.find(t => t.id === id);
+        
+        if (foundTag) {
+          setTag(foundTag);
+          setName(foundTag.name);
+        } else {
+          setError('Tag not found');
+          setTimeout(() => router.push('/tags'), 2000);
+        }
+      } catch (err: any) {
+        console.error('Failed to load tag:', err);
+        setError(err.error || 'Failed to load tag');
+        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    loadTag();
   }, [id, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -38,28 +66,53 @@ export default function EditTagPage() {
 
     if (!tag) return;
 
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      const updated = updateTag(id, {
+      await updateTag(session.lineUserId, id, {
         name: name.trim(),
       });
       
-      if (updated) {
-        router.push('/tags');
-      } else {
-        alert('Failed to update tag. Please try again.');
-      }
-    } catch (error) {
-      console.error('Failed to update tag:', error);
-      alert('Failed to update tag. Please try again.');
+      router.push('/tags');
+    } catch (err: any) {
+      console.error('Failed to update tag:', err);
+      setError(err.error || 'Failed to update tag');
+      alert(err.error || 'Failed to update tag. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!tag) {
-    return null;
+  if (isLoading) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
+  }
+
+  if (error || !tag) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error || 'Tag not found'}</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
   }
 
   return (
@@ -136,4 +189,5 @@ export default function EditTagPage() {
     </SafeArea>
   );
 }
+
 

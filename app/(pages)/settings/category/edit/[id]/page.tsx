@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
-import { getCategories, updateCategory, type Category } from '@/app/utils/storage.util';
+import { fetchCategories, updateCategory } from '@/app/lib/api';
+import { Category } from '@/app/lib/types';
 import { EmojiPicker } from '@/app/components/ui/emoji-picker';
+import { getUserSession } from '@/app/utils/storage.util';
 
 export default function EditCategoryPage() {
   const router = useRouter();
@@ -16,22 +18,48 @@ export default function EditCategoryPage() {
   const [emoji, setEmoji] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const categories = getCategories();
-    const foundCategory = categories.find(cat => cat.id === id);
-    
-    if (foundCategory) {
-      setCategory(foundCategory);
-      setName(foundCategory.name);
-      setEmoji(foundCategory.emoji || '');
-    } else {
-      alert('Category not found');
-      router.push('/settings/category');
+    async function loadCategory() {
+      const session = getUserSession();
+      if (!session?.lineUserId) {
+        setError('Not authenticated');
+        router.push('/splash');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const categories = await fetchCategories(session.lineUserId);
+        const foundCategory = categories.find(cat => cat.id === id);
+        
+        if (foundCategory) {
+          setCategory(foundCategory);
+          setName(foundCategory.name);
+          setEmoji(foundCategory.emoji || '');
+        } else {
+          setError('Category not found');
+          setTimeout(() => router.push('/settings/category'), 2000);
+        }
+      } catch (err: any) {
+        console.error('Failed to load category:', err);
+        setError(err.error || 'Failed to load category');
+        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
+          router.push('/splash');
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    loadCategory();
   }, [id, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -41,29 +69,54 @@ export default function EditCategoryPage() {
 
     if (!category) return;
 
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
     
     try {
-      const updated = updateCategory(id, {
+      await updateCategory(session.lineUserId, id, {
         name: name.trim(),
-        emoji: emoji.trim(),
+        emoji: emoji.trim() || undefined,
       });
       
-      if (updated) {
-        router.push('/settings/category');
-      } else {
-        alert('Failed to update category. Please try again.');
-      }
-    } catch (error) {
-      console.error('Failed to update category:', error);
-      alert('Failed to update category. Please try again.');
+      router.push('/settings/category');
+    } catch (err: any) {
+      console.error('Failed to update category:', err);
+      setError(err.error || 'Failed to update category');
+      alert(err.error || 'Failed to update category. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!category) {
-    return null;
+  if (isLoading) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
+  }
+
+  if (error || !category) {
+    return (
+      <SafeArea className="min-h-dvh bg-white dark:bg-black">
+        <Container className="py-4">
+          <div className="text-center py-12">
+            <p className="text-red-600 dark:text-red-400">{error || 'Category not found'}</p>
+          </div>
+        </Container>
+      </SafeArea>
+    );
   }
 
   return (
