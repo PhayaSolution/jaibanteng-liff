@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, addDays } from 'date-fns';
 import { th } from 'date-fns/locale';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
@@ -80,6 +80,54 @@ function getDateRange(period: PeriodType): { startDate: string; endDate: string 
   return {
     startDate: start.toISOString(),
     endDate: end.toISOString(),
+  };
+}
+
+// Helper to get page date range (10 days per page)
+// For initial load: calculates forward from periodStart
+// For load more: calculates backward from cursorEnd
+function getPageDateRange(
+  periodStartDate: string, 
+  cursorEndDate: string,
+  isInitialLoad: boolean = false
+): { pageStartDate: string; pageEndDate: string; hasMore: boolean } {
+  const periodStart = startOfDay(new Date(periodStartDate));
+  const periodEnd = endOfDay(new Date(cursorEndDate));
+  
+  let pageStart: Date;
+  let pageEnd: Date;
+  
+  if (isInitialLoad) {
+    // For initial load: start from periodStart and go forward 10 days
+    pageStart = periodStart;
+    // Calculate page end: 9 days after page start (to get 10 days total)
+    const pageEndDay = startOfDay(periodStart);
+    const pageEndDate = addDays(pageEndDay, 9);
+    pageEnd = endOfDay(pageEndDate);
+    
+    // Ensure page end doesn't go beyond period end
+    if (pageEnd > periodEnd) {
+      pageEnd = periodEnd;
+    }
+  } else {
+    // For load more: calculate backward from cursorEnd
+    const cursorEndDay = startOfDay(periodEnd);
+    const pageStartDate = subDays(cursorEndDay, 9);
+    pageStart = pageStartDate < periodStart ? periodStart : pageStartDate;
+    pageEnd = periodEnd;
+  }
+  
+  // Check if there's more data to load
+  // For initial load: check if pageEnd < periodEnd
+  // For load more: check if pageStart > periodStart
+  const hasMore = isInitialLoad 
+    ? pageEnd.getTime() < periodEnd.getTime()
+    : pageStart.getTime() > periodStart.getTime();
+  
+  return {
+    pageStartDate: pageStart.toISOString(),
+    pageEndDate: pageEnd.toISOString(),
+    hasMore,
   };
 }
 
@@ -298,14 +346,31 @@ export default function DashboardPage() {
   const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('วันนี้');
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [transactionGroups, setTransactionGroups] = useState<TransactionGroup[]>([]);
-  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([]);
+  
+  // Pagination state
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [periodStartDate, setPeriodStartDate] = useState<string>('');
+  const [periodEndDate, setPeriodEndDate] = useState<string>('');
+  const [currentPageStartDate, setCurrentPageStartDate] = useState<string>('');
+  const [currentPageEndDate, setCurrentPageEndDate] = useState<string>('');
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  
+  // Derived groups from transactions
+  const transactionGroups = transformTransactionsToGroups(transactions);
+  const taskGroups = transformTransactionsToTaskGroups(transactions);
+  
+  // Stats and chart state
   const [spendingData, setSpendingData] = useState<Array<{ month: string; value: number }>>([]);
   const [balance, setBalance] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Loading and error states
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  // Load stats for the full period (chart and balance)
+  const loadStatsForPeriod = useCallback(async (period: PeriodType) => {
     const session = getUserSession();
     if (!session?.lineUserId) {
       setError('Not authenticated');
@@ -313,43 +378,161 @@ export default function DashboardPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingStats(true);
     setError(null);
 
     try {
-      const { startDate, endDate } = getDateRange(selectedPeriod);
+      const { startDate, endDate } = getDateRange(period);
       
-      const [transactions, stats] = await Promise.all([
-        fetchTransactions(session.lineUserId, {
-          startDate,
-          endDate,
-        }),
-        fetchTransactionStats(session.lineUserId, {
-          startDate,
-          endDate,
-        }),
-      ]);
+      const stats = await fetchTransactionStats(session.lineUserId, {
+        startDate,
+        endDate,
+      });
 
-      setTransactionGroups(transformTransactionsToGroups(transactions));
-      setTaskGroups(transformTransactionsToTaskGroups(transactions));
-      setSpendingData(transformSpendingDataForGraph(stats.spendingData, selectedPeriod));
+      setSpendingData(transformSpendingDataForGraph(stats.spendingData, period));
       setBalance(stats.balance);
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+      console.error('Failed to load stats:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load stats';
       const errorObj = err as { error?: string };
       setError(errorObj.error || errorMessage);
       if (errorObj.error?.includes('401') || errorObj.error?.includes('Unauthorized')) {
         router.push('/splash');
       }
     } finally {
-      setIsLoading(false);
+      setIsLoadingStats(false);
     }
-  }, [selectedPeriod, router]);
+  }, [router]);
 
+  // Load initial transactions for the period (first 10-day page)
+  const loadInitialTransactionsForPeriod = useCallback(async (period: PeriodType) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      router.push('/splash');
+      return;
+    }
+
+    setIsLoadingList(true);
+    setError(null);
+
+    try {
+      const { startDate, endDate } = getDateRange(period);
+      setPeriodStartDate(startDate);
+      setPeriodEndDate(endDate);
+
+      // For month and year periods, load all data at once (no pagination)
+      // For today and week periods, use pagination (10 days per page)
+      const shouldPaginate = period === 'วันนี้' || period === 'อาทิตย์นี้';
+      
+      let pageStartDate: string;
+      let pageEndDate: string;
+      let hasMorePages: boolean;
+      
+      if (shouldPaginate) {
+        // Get first page (10 days) - start from beginning of period
+        const pageRange = getPageDateRange(startDate, endDate, true);
+        pageStartDate = pageRange.pageStartDate;
+        pageEndDate = pageRange.pageEndDate;
+        hasMorePages = pageRange.hasMore;
+      } else {
+        // Load entire period for month and year
+        pageStartDate = startDate;
+        pageEndDate = endDate;
+        hasMorePages = false;
+      }
+      
+      const pageTransactions = await fetchTransactions(session.lineUserId, {
+        startDate: pageStartDate,
+        endDate: pageEndDate,
+      });
+
+      setTransactions(pageTransactions);
+      setCurrentPageStartDate(pageStartDate);
+      setCurrentPageEndDate(pageEndDate);
+      setHasMore(hasMorePages);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load transactions';
+      const errorObj = err as { error?: string };
+      setError(errorObj.error || errorMessage);
+      if (errorObj.error?.includes('401') || errorObj.error?.includes('Unauthorized')) {
+        router.push('/splash');
+      }
+    } finally {
+      setIsLoadingList(false);
+      setIsLoadingMore(false);
+    }
+  }, [router]);
+
+  // Load more transactions (next 10-day page)
+  const loadMoreTransactions = useCallback(async () => {
+    if (!hasMore || isLoadingMore) {
+      return;
+    }
+
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    try {
+      // Calculate next page: start from 1 day after current page end, go forward 10 days
+      const currentPageEnd = new Date(currentPageEndDate);
+      const nextPageStart = startOfDay(addDays(currentPageEnd, 1));
+      const nextPageEndDay = addDays(nextPageStart, 9);
+      const nextPageEnd = endOfDay(nextPageEndDay);
+      
+      // Ensure next page end doesn't go beyond period end
+      const periodEnd = endOfDay(new Date(periodEndDate));
+      const actualNextPageEnd = nextPageEnd > periodEnd ? periodEnd : nextPageEnd;
+      
+      // Check if there's more data to load
+      const hasMorePages = actualNextPageEnd.getTime() < periodEnd.getTime();
+      
+      const pageStartDate = nextPageStart.toISOString();
+      const pageEndDate = actualNextPageEnd.toISOString();
+
+      const pageTransactions = await fetchTransactions(session.lineUserId, {
+        startDate: pageStartDate,
+        endDate: pageEndDate,
+      });
+
+      // Merge with existing transactions (append, then re-derive groups)
+      setTransactions((prev) => {
+        // Combine and deduplicate by id
+        const existingIds = new Set(prev.map(t => t.id));
+        const newTransactions = pageTransactions.filter(t => !existingIds.has(t.id));
+        return [...prev, ...newTransactions];
+      });
+
+      setCurrentPageStartDate(pageStartDate);
+      setCurrentPageEndDate(pageEndDate);
+      setHasMore(hasMorePages);
+    } catch (err) {
+      console.error('Failed to load more transactions:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load more transactions';
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || errorMessage);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, currentPageEndDate, periodEndDate]);
+
+  // Load data when period changes
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    // Reset pagination state
+    setTransactions([]);
+    setHasMore(false);
+    setIsLoadingMore(false);
+    
+    // Load stats and initial transactions in parallel
+    loadStatsForPeriod(selectedPeriod);
+    loadInitialTransactionsForPeriod(selectedPeriod);
+  }, [selectedPeriod, loadStatsForPeriod, loadInitialTransactionsForPeriod]);
 
   const handleDeleteTransaction = async (transaction: { id: string }) => {
     const session = getUserSession();
@@ -360,8 +543,10 @@ export default function DashboardPage() {
 
     try {
       await deleteTransaction(session.lineUserId, transaction.id);
-      // Reload data after deletion
-      await loadData();
+      // Remove transaction from local state and reload stats
+      setTransactions((prev) => prev.filter(t => t.id !== transaction.id));
+      // Reload stats to update balance
+      await loadStatsForPeriod(selectedPeriod);
     } catch (err) {
       console.error('Failed to delete transaction:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete transaction';
@@ -414,7 +599,7 @@ export default function DashboardPage() {
 
           {/* Balance - Centered */}
           <div className="text-center">
-            {isLoading ? (
+            {isLoadingStats ? (
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-black dark:text-white">
                 ...
               </h2>
@@ -469,29 +654,35 @@ export default function DashboardPage() {
         </div>
 
         {/* Content based on active tab */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        ) : activeTab === 'dashboard' ? (
+        {activeTab === 'dashboard' ? (
           <>
             {/* Spending Graph - Full Width on Desktop, Scrollable on Mobile */}
             <div className="mb-4 -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-8 overflow-x-auto lg:overflow-x-visible scroll-smooth">
               <div className="w-full min-w-[800px] lg:min-w-full">
-                <SpendingGraph 
-                  data={spendingData} 
-                  currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
-                />
+                {isLoadingStats ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400">กำลังโหลดกราฟ...</p>
+                  </div>
+                ) : (
+                  <SpendingGraph 
+                    data={spendingData} 
+                    currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
+                  />
+                )}
               </div>
             </div>
 
             {/* Transaction List */}
             <div>
-              {transactionGroups.length > 0 ? (
+              {isLoadingList ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">กำลังโหลดรายการ...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              ) : transactionGroups.length > 0 ? (
                 <>
                   <TransactionList
                     groups={transactionGroups}
@@ -502,11 +693,17 @@ export default function DashboardPage() {
                   />
                   
                   {/* View More Button */}
-                  <div className="mt-6 mb-4 text-center">
-                    <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                      ดูเพิ่มเติม
-                    </button>
-                  </div>
+                  {hasMore && (
+                    <div className="mt-6 mb-4 text-center">
+                      <button
+                        onClick={loadMoreTransactions}
+                        disabled={isLoadingMore}
+                        className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-12">
@@ -519,7 +716,15 @@ export default function DashboardPage() {
           <>
             {/* Task List */}
             <div>
-              {taskGroups.length > 0 ? (
+              {isLoadingList ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">กำลังโหลดรายการ...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              ) : taskGroups.length > 0 ? (
                 <>
                   <TaskList
                     groups={taskGroups}
@@ -533,11 +738,17 @@ export default function DashboardPage() {
                   />
                   
                   {/* View More Button */}
-                  <div className="mt-6 mb-4 text-center">
-                    <button className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                      ดูเพิ่มเติม
-                    </button>
-                  </div>
+                  {hasMore && (
+                    <div className="mt-6 mb-4 text-center">
+                      <button
+                        onClick={loadMoreTransactions}
+                        disabled={isLoadingMore}
+                        className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-12">
