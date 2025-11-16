@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     // Transform the response to include tags as an array
     const transformedTransactions = transactions.map((transaction: typeof transactions[0]) => ({
       ...transaction,
-      tags: transaction.tags.map((tt) => tt.tag),
+      tags: transaction.tags.map((tt: typeof transactions[0]['tags'][0]) => tt.tag),
     }));
 
     return NextResponse.json({ transactions: transformedTransactions });
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     // Transform the response
     const transformedTransaction = {
       ...transaction,
-      tags: transaction.tags.map((tt) => tt.tag),
+      tags: transaction.tags.map((tt: typeof transaction.tags[0]) => tt.tag),
     };
 
     return NextResponse.json({ transaction: transformedTransaction }, { status: 201 });

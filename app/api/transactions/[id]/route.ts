@@ -146,7 +146,7 @@ export async function PUT(
     // Transform the response
     const transformedTransaction = {
       ...transaction,
-      tags: transaction.tags.map((tt) => tt.tag),
+      tags: transaction.tags.map((tt: typeof transaction.tags[0]) => tt.tag),
     };
 
     return NextResponse.json({ transaction: transformedTransaction });
