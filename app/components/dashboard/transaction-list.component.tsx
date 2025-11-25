@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 
+import { TrashIcon } from '@/app/components/icons';
+
 interface Transaction {
   id: string;
   category: string;
@@ -48,26 +50,26 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
     }
   };
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="space-y-5">
+        <div key={groupIndex} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
           {/* Date header */}
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xs font-medium text-amber-700 dark:text-amber-600 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               {group.date}
             </h3>
-            <span className={`text-xs font-medium ${
+            <span className={`text-xs font-semibold ${
               group.total >= 0 
-                ? 'text-emerald-700 dark:text-emerald-600' 
-                : 'text-rose-700 dark:text-rose-600'
+                ? 'text-emerald-600 dark:text-emerald-500' 
+                : 'text-rose-600 dark:text-rose-500'
             }`}>
               {group.total >= 0 ? '+' : ''}฿{Math.abs(group.total).toLocaleString()}
             </span>
           </div>
 
           {/* Transactions */}
-          <div className="space-y-1">
-            {group.transactions.map((transaction) => {
+          <div>
+            {group.transactions.map((transaction, index) => {
               const categoryEmoji = transaction.categoryEmoji || '📁';
               const tagsDisplay = transaction.tags && transaction.tags.length > 0
                 ? transaction.tags.join(', ')
@@ -107,16 +109,20 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
               }
               
               const amountColor = transaction.type === 'income' 
-                ? 'text-emerald-700 dark:text-emerald-600' 
-                : 'text-rose-700 dark:text-rose-600';
+                ? 'text-emerald-600 dark:text-emerald-500' 
+                : 'text-rose-600 dark:text-rose-500';
               
+              const isLast = index === group.transactions.length - 1;
+
               return (
                 <div
                   key={transaction.id}
-                  className="group flex items-center gap-4 py-3 px-2 border-b border-amber-100 dark:border-amber-900/30 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 transition-colors duration-200"
+                  className={`group relative flex items-center gap-4 py-3 px-4 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-200 ${
+                    !isLast ? 'border-b border-gray-100 dark:border-zinc-800' : ''
+                  }`}
                 >
                   {/* Emoji Icon */}
-                  <div className="shrink-0 w-10 h-10 flex items-center justify-center text-xl bg-amber-50 dark:bg-amber-950/30 rounded-lg">
+                  <div className="shrink-0 w-10 h-10 flex items-center justify-center text-xl bg-gray-100 dark:bg-zinc-800 rounded-full">
                     {categoryEmoji}
                   </div>
                   
@@ -126,24 +132,24 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                     onClick={() => onTransactionClick?.(transaction)}
                   >
                     <div className="flex items-baseline gap-2 mb-0.5">
-                      <p className="text-sm font-normal text-stone-800 dark:text-stone-200">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {transaction.category}
                       </p>
                       {timeDisplay && (
-                        <span className="text-xs text-amber-600 dark:text-amber-500 font-normal">
+                        <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">
                           {timeDisplay}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 font-normal">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal truncate">
                       {tagsDisplay}
                     </p>
                   </div>
                   
                   {/* Amount and Delete button */}
-                  <div className="shrink-0 flex items-center gap-4">
+                  <div className="shrink-0 flex items-center gap-3">
                     <span 
-                      className={`text-sm font-medium cursor-pointer ${amountColor}`}
+                      className={`text-sm font-semibold cursor-pointer ${amountColor}`}
                       onClick={() => onTransactionClick?.(transaction)}
                     >
                       {transaction.type === 'income' ? '+' : '-'}฿{transaction.amount.toLocaleString()}
@@ -154,18 +160,16 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                         handleDelete(transaction);
                       }}
                       disabled={loadingIds.has(transaction.id)}
-                      className="px-3 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-600 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 min-w-[50px] justify-center"
+                      className="p-2 text-gray-400 hover:text-rose-500 dark:text-gray-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Delete"
                     >
                       {loadingIds.has(transaction.id) ? (
-                        <>
-                          <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span className="sr-only">กำลังลบ...</span>
-                        </>
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                       ) : (
-                        'ลบ'
+                        <TrashIcon className="w-4 h-4" />
                       )}
                     </button>
                   </div>

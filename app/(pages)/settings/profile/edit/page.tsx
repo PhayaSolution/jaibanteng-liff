@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Container from '@/app/components/layout/container.component';
-import SafeArea from '@/app/components/layout/safe-area.component';
+import { User, Image as ImageIcon } from 'lucide-react';
+import SettingsLayout from '@/app/components/settings/settings-layout.component';
+import SettingsSection from '@/app/components/settings/settings-section.component';
 import { fetchCurrentUser } from '@/app/lib/api';
-import { User } from '@/app/lib/types';
+import { User as UserType } from '@/app/lib/types';
 import { getUserSession, saveUserSession } from '@/app/utils/storage.util';
 
 export default function EditProfilePage() {
@@ -13,7 +14,6 @@ export default function EditProfilePage() {
   const [name, setName] = useState('');
   const [pictureUrl, setPictureUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,15 +31,11 @@ export default function EditProfilePage() {
 
       try {
         const userData = await fetchCurrentUser(session.lineUserId);
-        setUser(userData);
         setName(userData.displayName);
         setPictureUrl(userData.pictureUrl || '');
       } catch (err: any) {
         console.error('Failed to load user:', err);
         setError(err.error || 'Failed to load user');
-        if (err.error?.includes('401') || err.error?.includes('Unauthorized')) {
-          router.push('/splash');
-        }
       } finally {
         setIsLoading(false);
       }
@@ -56,10 +52,6 @@ export default function EditProfilePage() {
       return;
     }
 
-    // Note: The API doesn't currently support updating user profile
-    // For now, we'll update the local session to reflect the change
-    // In the future, you may want to add a PATCH endpoint to /api/users/me
-    
     const session = getUserSession();
     if (!session?.lineUserId) {
       setError('Not authenticated');
@@ -79,14 +71,12 @@ export default function EditProfilePage() {
       };
       saveUserSession(updatedSession);
       
-      // TODO: If you add a PATCH endpoint to /api/users/me, call it here:
-      // await updateUser(session.lineUserId, { displayName: name.trim(), pictureUrl: pictureUrl.trim() || undefined });
+      // Note: Add API call here when endpoint is available
       
       router.push('/settings');
     } catch (err: any) {
       console.error('Failed to update profile:', err);
       setError(err.error || 'Failed to update profile');
-      alert(err.error || 'Failed to update profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -94,148 +84,88 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <SafeArea className="min-h-dvh bg-white dark:bg-black">
-        <Container className="py-4">
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
-          </div>
-        </Container>
-      </SafeArea>
-    );
-  }
-
-  if (error || !user) {
-    return (
-      <SafeArea className="min-h-dvh bg-white dark:bg-black">
-        <Container className="py-4">
-          <div className="text-center py-12">
-            <p className="text-red-600 dark:text-red-400">{error || 'User not found'}</p>
-          </div>
-        </Container>
-      </SafeArea>
+      <SettingsLayout title="Edit Profile">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto"></div>
+        </div>
+      </SettingsLayout>
     );
   }
 
   return (
-    <SafeArea className="min-h-dvh bg-white dark:bg-black">
-      <Container className="py-4">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={() => router.push('/settings')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              aria-label="Go back"
-            >
-              <svg
-                className="w-6 h-6 text-black dark:text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h1 className="text-2xl font-bold text-black dark:text-white">
-              Edit Profile
-            </h1>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Avatar Preview */}
-          <div className="flex flex-col items-center mb-6">
+    <SettingsLayout title="Edit Profile">
+      <form onSubmit={handleSubmit}>
+        {/* Avatar Preview */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 overflow-hidden border-4 border-white dark:border-black shadow-sm">
             {pictureUrl ? (
               <img
                 src={pictureUrl}
                 alt={name}
-                className="w-24 h-24 rounded-full object-cover mb-4"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 text-4xl">
-                <svg
-                  className="w-12 h-12 text-gray-400 dark:text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
+              <User className="w-12 h-12 text-gray-400 dark:text-gray-600" />
             )}
           </div>
+        </div>
 
-          {/* Name Field */}
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-black dark:text-white mb-2"
-            >
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-              required
-            />
-          </div>
+        <SettingsSection title="Public Profile">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-black dark:text-white mb-2">
+                Display Name
+              </label>
+              <div className="relative">
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  placeholder="Your name"
+                  required
+                />
+                <User className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+              </div>
+            </div>
 
-          {/* Picture URL Field */}
-          <div>
-            <label
-              htmlFor="pictureUrl"
-              className="block text-sm font-medium text-black dark:text-white mb-2"
-            >
-              Picture URL
-            </label>
-            <input
-              id="pictureUrl"
-              type="text"
-              value={pictureUrl}
-              onChange={(e) => setPictureUrl(e.target.value)}
-              placeholder="Enter picture URL"
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-            />
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Optional: Enter a URL for your profile picture
-            </p>
+            <div>
+              <label htmlFor="pictureUrl" className="block text-sm font-medium text-black dark:text-white mb-2">
+                Picture URL
+              </label>
+              <div className="relative">
+                <input
+                  id="pictureUrl"
+                  type="text"
+                  value={pictureUrl}
+                  onChange={(e) => setPictureUrl(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  placeholder="https://..."
+                />
+                <ImageIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Optional: URL to your profile picture
+              </p>
+            </div>
           </div>
+        </SettingsSection>
 
-          {/* Submit Button */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => router.push('/settings')}
-              className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !name.trim()}
-              className="flex-1 px-4 py-3 rounded-lg bg-black dark:bg-white text-white dark:text-black font-medium hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </button>
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+            {error}
           </div>
-        </form>
-      </Container>
-    </SafeArea>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting || !name.trim()}
+          className="w-full py-4 rounded-lg bg-black dark:bg-white text-white dark:text-black font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+        >
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </button>
+      </form>
+    </SettingsLayout>
   );
 }
-

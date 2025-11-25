@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Container from '@/app/components/layout/container.component';
-import SafeArea from '@/app/components/layout/safe-area.component';
+import { User as UserIcon, List, Tags, LogOut, ChevronRight } from 'lucide-react';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
-import { getUserSession } from '@/app/utils/storage.util';
+import SettingsLayout from '@/app/components/settings/settings-layout.component';
+import SettingsSection from '@/app/components/settings/settings-section.component';
+import SettingsListItem from '@/app/components/settings/settings-list-item.component';
+import { getUserSession, clearUserSession } from '@/app/utils/storage.util';
 import { fetchCurrentUser } from '@/app/lib/api';
 
 export default function SettingsPage() {
@@ -14,6 +16,7 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('User');
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -45,140 +48,82 @@ export default function SettingsPage() {
     loadUserProfile();
   }, []);
 
+  const handleLogout = async () => {
+    if (!confirm('Are you sure you want to logout?')) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+    try {
+      clearUserSession();
+      router.push('/splash');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
-    <SafeArea className="min-h-screen min-h-dvh bg-white dark:bg-black">
-      <Container className="py-4 pb-20">
-        {/* Profile Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 overflow-hidden">
-            {isLoading ? (
-              <svg
-                className="w-12 h-12 text-gray-400 dark:text-gray-600 animate-pulse"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            ) : pictureUrl ? (
-              <Image
-                src={pictureUrl}
-                alt={displayName}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
-            ) : (
-              <svg
-                className="w-12 h-12 text-gray-400 dark:text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold text-black dark:text-white">
-              {isLoading ? '...' : displayName}
-            </h2>
-            <button
-              onClick={() => router.push('/settings/profile/edit')}
-              className="p-1 text-gray-400 hover:text-black dark:hover:text-white"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Settings Options */}
-        <div className="space-y-2 mb-6">
-          <button
-            onClick={() => router.push('/settings/category')}
-            className="w-full flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            <span className="text-sm font-medium text-black dark:text-white">Category</span>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-
-          <button
-            onClick={() => router.push('/tags')}
-            className="w-full flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            <span className="text-sm font-medium text-black dark:text-white">Tags</span>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Logout Button */}
-        <button className="w-full py-4 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
-          <span>Logout</span>
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+    <SettingsLayout title="Settings" showBackButton={false}>
+      {/* Profile Section */}
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 overflow-hidden border-4 border-white dark:border-black shadow-sm">
+          {isLoading ? (
+            <div className="w-full h-full animate-pulse bg-gray-300 dark:bg-gray-700" />
+          ) : pictureUrl ? (
+            <Image
+              src={pictureUrl}
+              alt={displayName}
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+              unoptimized
             />
-          </svg>
-        </button>
-      </Container>
+          ) : (
+            <UserIcon className="w-12 h-12 text-gray-400 dark:text-gray-600" />
+          )}
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
+            {isLoading ? '...' : displayName}
+          </h2>
+          <button
+            onClick={() => router.push('/settings/profile/edit')}
+            className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
+          >
+            Edit Profile
+          </button>
+        </div>
+      </div>
+
+      {/* Main Settings */}
+      <SettingsSection title="General">
+        <SettingsListItem
+          title="Categories"
+          description="Manage spending categories"
+          icon={<List className="w-5 h-5" />}
+          href="/settings/category"
+        />
+        <SettingsListItem
+          title="Tags"
+          description="Manage transaction tags"
+          icon={<Tags className="w-5 h-5" />}
+          href="/tags"
+        />
+      </SettingsSection>
+
+      {/* Account Actions */}
+      <SettingsSection title="Account">
+        <SettingsListItem
+          title={isLoggingOut ? "Logging out..." : "Logout"}
+          icon={<LogOut className="w-5 h-5" />}
+          onClick={handleLogout}
+          variant="danger"
+          rightElement={null}
+        />
+      </SettingsSection>
 
       <BottomNavigation />
-    </SafeArea>
+    </SettingsLayout>
   );
 }
-

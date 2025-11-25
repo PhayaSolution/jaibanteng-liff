@@ -700,17 +700,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <SafeArea className="h-dvh bg-white dark:bg-black flex flex-col overflow-hidden">
+    <SafeArea className="h-dvh bg-gray-50 dark:bg-black flex flex-col overflow-hidden">
       <Container className="py-4 pb-32 sm:pb-24 flex-1 overflow-y-auto min-h-0">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between">
             {/* Period Selector Button */}
             <div className="relative inline-block">
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
-                className="appearance-none px-3 py-1.5 sm:px-4 sm:py-2 pr-7 sm:pr-8 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs sm:text-sm font-medium text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                className="appearance-none px-4 py-2 pr-10 rounded-full border-0 bg-white dark:bg-zinc-900 shadow-sm text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all cursor-pointer focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none"
               >
                 <option value="วันนี้">วันนี้</option>
                 <option value="อาทิตย์นี้">อาทิตย์นี้</option>
@@ -718,7 +718,7 @@ export default function DashboardPage() {
                 <option value="ปีนี้">ปีนี้</option>
               </select>
               <svg
-                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-black dark:text-white pointer-events-none"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -735,24 +735,25 @@ export default function DashboardPage() {
             {/* Search Icon */}
             <button
               onClick={() => router.push('/dashboard/search')}
-              className="p-1.5 sm:p-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2.5 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white bg-white dark:bg-zinc-900 shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-full transition-all"
             >
-              <SearchIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <SearchIcon className="w-5 h-5" />
             </button>
           </div>
 
           {/* Balance - Centered */}
-          <div className="text-center">
+          <div className="text-center py-2">
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">ยอดเงินคงเหลือ</span>
             {isLoadingStats ? (
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-black dark:text-white">
+              <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white animate-pulse">
                 ...
               </h2>
             ) : error ? (
-              <h2 className="text-base sm:text-lg font-medium text-red-600 dark:text-red-400">
+              <h2 className="mt-1 text-lg font-medium text-rose-600 dark:text-rose-500">
                 {error}
               </h2>
             ) : (
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-black dark:text-white">
+              <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
                 ฿{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h2>
             )}
@@ -760,39 +761,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex gap-4 sm:gap-8 border-b border-gray-200 dark:border-gray-800">
+        <div className="mb-6">
+          <div className="flex p-1 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`group relative px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-300 ease-in-out ${
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 activeTab === 'dashboard'
-                  ? 'text-black dark:text-white'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
               }`}
             >
-              <span className="relative z-10">Dashboard</span>
-              {activeTab === 'dashboard' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white transition-all duration-300 ease-in-out"></span>
-              )}
-              {activeTab !== 'dashboard' && (
-                <span className="absolute bottom-0 left-1/2 right-1/2 h-0.5 bg-transparent transition-all duration-300 ease-in-out group-hover:left-0 group-hover:right-0 group-hover:bg-gray-300 dark:group-hover:bg-gray-600"></span>
-              )}
+              Dashboard
             </button>
             <button
               onClick={() => setActiveTab('task')}
-              className={`group relative px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-300 ease-in-out ${
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 activeTab === 'task'
-                  ? 'text-black dark:text-white'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
               }`}
             >
-              <span className="relative z-10">Task</span>
-              {activeTab === 'task' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white transition-all duration-300 ease-in-out"></span>
-              )}
-              {activeTab !== 'task' && (
-                <span className="absolute bottom-0 left-1/2 right-1/2 h-0.5 bg-transparent transition-all duration-300 ease-in-out group-hover:left-0 group-hover:right-0 group-hover:bg-gray-300 dark:group-hover:bg-gray-600"></span>
-              )}
+              Task
             </button>
           </div>
         </div>
@@ -800,19 +789,21 @@ export default function DashboardPage() {
         {/* Content based on active tab */}
         {activeTab === 'dashboard' ? (
           <>
-            {/* Spending Graph - Full Width on Desktop, Scrollable on Mobile */}
-            <div className="mb-4 -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-8 overflow-x-auto lg:overflow-x-visible scroll-smooth">
-              <div className="w-full min-w-[800px] lg:min-w-full">
-                {isLoadingStats ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 dark:text-gray-400">กำลังโหลดกราฟ...</p>
-                  </div>
-                ) : (
-                  <SpendingGraph 
-                    data={spendingData} 
-                    currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
-                  />
-                )}
+            {/* Spending Graph */}
+            <div className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-4 overflow-hidden">
+              <div className="overflow-x-auto lg:overflow-x-visible scroll-smooth pb-2">
+                <div className="w-full min-w-[600px] lg:min-w-full">
+                  {isLoadingStats ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500 dark:text-gray-400">กำลังโหลดกราฟ...</p>
+                    </div>
+                  ) : (
+                    <SpendingGraph 
+                      data={spendingData} 
+                      currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -824,7 +815,7 @@ export default function DashboardPage() {
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
-                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                  <p className="text-rose-600 dark:text-rose-500">{error}</p>
                 </div>
               ) : transactionGroups.length > 0 ? (
                 <>
@@ -838,11 +829,11 @@ export default function DashboardPage() {
                   
                   {/* View More Button */}
                   {hasMore && (
-                    <div className="mt-4 sm:mt-6 mb-6 sm:mb-8 text-center">
+                    <div className="mt-6 mb-8 text-center">
                       <button
                         onClick={loadMoreTransactions}
                         disabled={isLoadingMore}
-                        className="px-4 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
                       </button>
@@ -882,11 +873,11 @@ export default function DashboardPage() {
                   
                   {/* View More Button */}
                   {hasMore && (
-                    <div className="mt-4 sm:mt-6 mb-6 sm:mb-8 text-center">
+                    <div className="mt-6 mb-8 text-center">
                       <button
                         onClick={loadMoreTransactions}
                         disabled={isLoadingMore}
-                        className="px-4 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
                       </button>

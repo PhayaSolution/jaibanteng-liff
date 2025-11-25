@@ -8,6 +8,7 @@ import {
 } from '@/app/components/ui/popover';
 import { createTag } from '@/app/lib/api';
 import { getUserSession } from '@/app/utils/storage.util';
+import { Folder, Hash, Plus, X, Check } from 'lucide-react';
 
 interface CategoryTag {
   id: string;
@@ -114,8 +115,8 @@ export default function CategoryTags({
   };
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {/* Category Selector Button - Single button */}
+    <div className="flex flex-wrap gap-2 items-center justify-center content-start">
+      {/* Category Selector Button */}
       {categories.length > 0 && (
         <Popover
           open={categoryPopovers['category-selector'] || false}
@@ -124,36 +125,42 @@ export default function CategoryTags({
           <PopoverTrigger asChild>
             <button
               onClick={(e) => {
-                // If category is selected, clicking the button directly clears it
                 if (selectedCategory) {
                   e.preventDefault();
                   onCategoryClick(null);
                 }
               }}
               className={`
-                category-tag-selector px-3 py-1.5 rounded-lg font-medium transition-colors focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none!
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border shrink-0
                 ${
                   selectedCategory
-                    ? 'bg-black text-white'
-                    : 'bg-black text-white'
+                    ? 'bg-black text-white border-black hover:bg-neutral-800'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                 }
               `}
             >
-              <span className="text-sm">
-                {selectedCategory ? selectedCategory.name : 'Select category'}
-              </span>
+              {selectedCategory ? (
+                <>
+                  <span className="max-w-[100px] truncate">{selectedCategory.name}</span>
+                  <X className="w-3 h-3 ml-0.5 opacity-70" />
+                </>
+              ) : (
+                <>
+                  <Folder className="w-3 h-3" />
+                  <span>Category</span>
+                </>
+              )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 border border-gray-300 shadow-lg bg-white" align="start">
-            <div className="max-h-[300px] overflow-y-auto">
+          <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4 rounded-2xl border-0 shadow-xl bg-white" align="start" sideOffset={8}>
+            <div className="max-h-[250px] overflow-y-auto">
               {categories.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">
+                <div className="text-center py-4 text-gray-500 text-xs">
                   No categories available
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {categories.map((cat) => {
-                    // Extract emoji and name from the formatted string (e.g., "☕ Beverage")
                     const parts = cat.name.split(' ');
                     const emoji = parts[0];
                     const name = parts.slice(1).join(' ');
@@ -163,16 +170,16 @@ export default function CategoryTags({
                         key={cat.id}
                         onClick={() => handleSelectCategory('category-selector', cat)}
                         className={`
-                          flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors focus:outline-none focus:ring-0 active:outline-none active:ring-0 shadow-none!
+                          flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all duration-200 border
                           ${
                             selectedCategory?.id === cat.id
-                              ? 'bg-black text-white'
-                              : 'bg-white text-black'
+                              ? 'bg-black text-white border-black'
+                              : 'bg-gray-50 text-gray-700 border-transparent hover:bg-gray-100'
                           }
                         `}
                       >
-                        <span className="text-2xl">{emoji || '📁'}</span>
-                        <span className="text-sm font-medium">{name || cat.name}</span>
+                        <span className="text-xl leading-none mb-0.5">{emoji || '📁'}</span>
+                        <span className="text-[10px] font-medium truncate w-full text-center leading-tight">{name || cat.name}</span>
                       </button>
                     );
                   })}
@@ -188,46 +195,51 @@ export default function CategoryTags({
         <button
           key={selectedTag.id}
           onClick={() => onTagRemove?.(selectedTag.id)}
-          className="px-3 py-1.5 rounded-lg font-medium transition-colors bg-black text-white shadow-none!"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors bg-black text-white hover:bg-neutral-800 group shrink-0"
         >
-          <span className="text-sm">{formatTagName(selectedTag.name)}</span>
+          <span className="max-w-[80px] truncate">{formatTagName(selectedTag.name)}</span>
+          <X className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
         </button>
       ))}
 
-      {/* Tag Selector Button - Single button (always show to allow adding new tags) */}
+      {/* Tag Selector Button */}
       <Popover
         open={tagPopovers['tag-selector'] || false}
         onOpenChange={(open) => handleTagPopoverChange('tag-selector', open)}
       >
         <PopoverTrigger asChild>
           <button
-            className="category-tag-selector px-3 py-1.5 rounded-lg font-medium transition-colors bg-black text-white focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none!"
+            className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border shrink-0
+                bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300
+            `}
           >
-            <span className="text-sm">Select tag</span>
+            <Hash className="w-3 h-3" />
+            <span>Tag</span>
           </button>
         </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-3rem)] max-w-sm p-3 border border-gray-300 shadow-lg bg-white" align="start">
-            <div className="max-h-[300px] flex flex-col">
+          <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4 rounded-2xl border-0 shadow-xl bg-white" align="start" sideOffset={8}>
+            <div className="max-h-[250px] flex flex-col">
               {/* Add New Tag Input */}
-              <div className="mb-3 pb-3 border-b border-gray-200">
+              <div className="mb-2 pb-2 border-b border-gray-100">
                 <div className="flex gap-2">
                     <div className="flex-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">#</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">#</span>
                       <input
                         type="text"
                         value={newTagName['tag-selector'] || ''}
                         onChange={(e) => setNewTagName((prev) => ({ ...prev, 'tag-selector': e.target.value }))}
                         onKeyPress={(e) => handleTagKeyPress(e, 'tag-selector')}
-                        placeholder="Add new tag..."
-                        className="w-full pl-7 pr-3 py-2 rounded-lg border border-gray-300 bg-white text-black text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                        placeholder="New tag..."
+                        className="w-full pl-6 pr-2 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-black text-xs focus:outline-none focus:ring-1 focus:ring-black focus:bg-white transition-colors"
                       />
                     </div>
                   <button
                     onClick={() => handleAddTag('tag-selector')}
                     disabled={!newTagName['tag-selector']?.trim()}
-                    className="px-4 py-2 rounded-lg bg-black text-white font-medium text-sm hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-none!"
+                    className="px-2.5 py-1.5 rounded-lg bg-black text-white font-medium text-xs hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    Add
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -235,11 +247,11 @@ export default function CategoryTags({
               {/* Tags List */}
               <div className="flex-1 overflow-y-auto">
                 {allTags.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">
+                  <div className="text-center py-4 text-gray-500 text-xs">
                     No tags available
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {allTags.map((t) => {
                       const isSelected = selectedTags.some((st) => st.id === t.id);
                       return (
@@ -247,17 +259,17 @@ export default function CategoryTags({
                           key={t.id}
                           onClick={() => handleSelectTag('tag-selector', t)}
                           className={`
-                            w-full px-4 py-3 rounded-lg font-medium transition-colors text-left flex items-center justify-between focus:outline-none focus:ring-0 active:outline-none active:ring-0
+                            w-full px-3 py-2 rounded-lg font-medium transition-colors text-left flex items-center justify-between
                             ${
                               isSelected
                                 ? 'bg-black text-white'
-                                : 'bg-white text-black'
+                                : 'bg-transparent text-gray-700 hover:bg-gray-50'
                             }
                           `}
                         >
-                          <span className="text-sm">{t.name}</span>
+                          <span className="text-xs">{t.name}</span>
                           {isSelected && (
-                            <span className="text-sm">✓</span>
+                            <Check className="w-3.5 h-3.5" />
                           )}
                         </button>
                       );
@@ -271,4 +283,3 @@ export default function CategoryTags({
     </div>
   );
 }
-

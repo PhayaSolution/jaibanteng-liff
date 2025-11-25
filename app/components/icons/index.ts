@@ -9,4 +9,4 @@ export { default as OilIcon } from './oil-icon.component';
 export { default as ListIcon } from './list-icon.component';
 export { default as ProfileIcon } from './profile-icon.component';
 export { default as BackspaceIcon } from './backspace-icon.component';
-
+export { default as TrashIcon } from './trash-icon.component';

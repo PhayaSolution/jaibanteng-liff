@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Delete, Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
@@ -79,7 +79,9 @@ export default function AddTransactionPage() {
       if (amount === '0.00' || amount === '0') {
         setAmount(value === '.' ? '0.' : value);
       } else {
-        setAmount(amount + value);
+        if (amount.replace('.', '').length < 9) {
+          setAmount(amount + value);
+        }
       }
     }
   };
@@ -92,7 +94,6 @@ export default function AddTransactionPage() {
     }
   };
 
-
   const handleCategoryClick = (category: { id: string; name: string; type: 'category' | 'tag' } | null) => {
     setSelectedCategory(category);
   };
@@ -101,10 +102,8 @@ export default function AddTransactionPage() {
     setSelectedTags((prev) => {
       const exists = prev.find((t) => t.id === tag.id);
       if (exists) {
-        // Remove if already selected
         return prev.filter((t) => t.id !== tag.id);
       } else {
-        // Add if not selected
         return [...prev, tag];
       }
     });
@@ -160,118 +159,129 @@ export default function AddTransactionPage() {
   };
 
   return (
-    <SafeArea className="min-h-dvh bg-white flex flex-col">
-      <Container className="flex-1 flex flex-col px-6 pt-6">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="mb-4 p-2 text-black hover:bg-gray-100 rounded transition-colors self-start"
-        >
-          <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
-        </button>
-
-        {/* Transaction Type Toggles */}
-        <div className="flex gap-2 mb-4">
+    <SafeArea className="h-dvh max-h-dvh bg-white flex flex-col overflow-hidden">
+      <Container className="flex flex-col h-full p-0 sm:p-0 md:p-0 relative">
+        
+        {/* 1. Header Section (Fixed Top) */}
+        <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0 z-10">
           <button
-            onClick={() => setType('income')}
-            className={`
-              flex-1 py-3 rounded-lg font-medium transition-colors border text-base
-              ${
-                type === 'income'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-black border-gray-300'
-              }
-            `}
+            onClick={() => router.back()}
+            className="p-2 -ml-2 text-black hover:bg-gray-100 rounded-full transition-colors"
           >
-            รายรับ
+            <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
           </button>
-          <button
-            onClick={() => setType('expense')}
-            className={`
-              flex-1 py-3 rounded-lg font-medium transition-colors border text-base
-              ${
-                type === 'expense'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-black border-gray-300'
-              }
-            `}
-          >
-            รายจ่าย
-          </button>
-        </div>
-
-        {/* Date Input Field */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between px-4 py-3 mb-5 border border-black rounded-lg bg-white text-black font-normal text-base h-auto"
+          
+          <div className="flex bg-gray-100/80 p-1 rounded-full backdrop-blur-sm">
+            <button
+              onClick={() => setType('income')}
+              className={`
+                px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                ${
+                  type === 'income'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }
+              `}
             >
-              <span className="flex-1 text-left">
-                {date ? format(date, 'dd/MM/yyyy') : 'Select date'}
-              </span>
-              <CalendarIcon className="w-5 h-5 shrink-0" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(selectedDate) => {
-                setDate(selectedDate);
-                setOpen(false);
-              }}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-
-        {/* Amount Display */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-4xl font-bold text-black">
-            ฿{amount}
+              รายรับ
+            </button>
+            <button
+              onClick={() => setType('expense')}
+              className={`
+                px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                ${
+                  type === 'expense'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }
+              `}
+            >
+              รายจ่าย
+            </button>
           </div>
-          <button
-            onClick={handleDelete}
-            className="p-2 text-black hover:bg-gray-100 rounded transition-colors"
-          >
-            <Delete className="w-6 h-6 stroke-[2.5]" />
-          </button>
+          
+          {/* Placeholder for balance to keep center alignment of toggle */}
+          <div className="w-10"></div>
         </div>
 
-        {/* Category Tags */}
-        <div className="flex-1 flex flex-col justify-start gap-1">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">กำลังโหลด...</p>
+        {/* 2. Main Content (Centered Amount) */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 pb-8">
+          
+          {/* Date Trigger - Floating above amount */}
+          <div className="mb-8">
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-auto py-2 px-4 rounded-full bg-gray-50 text-black font-medium text-sm border border-transparent hover:border-gray-200 hover:bg-gray-100 transition-all shadow-sm"
+                >
+                  <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
+                  <span>
+                    {date ? format(date, 'd MMMM yyyy') : 'Select date'}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none shadow-xl rounded-xl bg-transparent" align="center">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(selectedDate) => {
+                    setDate(selectedDate);
+                    setOpen(false);
+                  }}
+                  initialFocus
+                  className="rounded-xl border bg-white"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Hero Amount */}
+          <div className="flex flex-col items-center relative w-full animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex items-baseline gap-1">
+              <span className="text-6xl sm:text-7xl font-bold text-black tracking-tighter leading-none">
+                {amount}
+              </span>
             </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-600 dark:text-red-400">{error}</p>
-            </div>
-          ) : (
-            <CategoryTags
-              categories={categories.map(cat => ({ id: cat.id, name: `${cat.emoji || '📁'} ${cat.name}`, type: 'category' as const }))}
-              tags={tags.map(tag => ({ id: tag.id, name: `#${tag.name}`, type: 'tag' as const }))}
-              selectedCategory={selectedCategory}
-              selectedTags={selectedTags}
-              onCategoryClick={handleCategoryClick}
-              onTagClick={handleTagClick}
-              onTagRemove={handleTagRemove}
-            />
-          )}
+            <span className="text-sm text-gray-400 font-medium mt-2">บาท</span>
+          </div>
         </div>
 
-        {/* Numeric Keypad */}
-        <div className="mt-auto pb-8 pt-6">
+        {/* 3. Bottom Controls (Category + Keypad) */}
+        <div className="px-4 pb-6 pt-2 shrink-0 bg-white flex flex-col gap-5 z-10 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] border-t border-gray-50/50">
+          
+          {/* Category Tags Area */}
+          <div className="w-full min-h-[44px]">
+             {isLoading ? (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-500 text-xs py-2">{error}</div>
+            ) : (
+              <div className="flex justify-center">
+                <CategoryTags
+                  categories={categories.map(cat => ({ id: cat.id, name: `${cat.emoji || '📁'} ${cat.name}`, type: 'category' as const }))}
+                  tags={tags.map(tag => ({ id: tag.id, name: `#${tag.name}`, type: 'tag' as const }))}
+                  selectedCategory={selectedCategory}
+                  selectedTags={selectedTags}
+                  onCategoryClick={handleCategoryClick}
+                  onTagClick={handleTagClick}
+                  onTagRemove={handleTagRemove}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Keypad */}
           <NumericKeypad
             onNumberClick={handleNumberClick}
             onDelete={handleDelete}
             onConfirm={handleConfirm}
           />
         </div>
+
       </Container>
     </SafeArea>
   );
 }
-
