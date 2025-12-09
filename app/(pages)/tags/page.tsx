@@ -32,9 +32,13 @@ export default function TagsPage() {
       try {
         const data = await fetchTags(session.lineUserId);
         setTags(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load tags:', err);
-        setError(err.error || 'Failed to load tags');
+        const message =
+          typeof err === 'object' && err !== null && 'error' in err
+            ? (err as { error?: string }).error ?? 'Failed to load tags'
+            : 'Failed to load tags';
+        setError(message);
       } finally {
         setIsLoading(false);
       }

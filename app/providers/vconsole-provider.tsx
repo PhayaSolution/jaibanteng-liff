@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import { isLiff } from '@/app/utils/liff.util';
+import type VConsole from 'vconsole';
 
-let vConsoleInstance: any = null;
+let vConsoleInstance: VConsole | null = null;
 
 export function VConsoleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -25,7 +26,7 @@ export function VConsoleProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Listen for toggle events
-    const handleToggle = (event: CustomEvent) => {
+    const handleToggle = (event: CustomEvent<{ enabled: boolean }>) => {
       const { enabled: toggleEnabled } = event.detail;
       if (toggleEnabled && !vConsoleInstance) {
         initVConsole();
@@ -34,10 +35,13 @@ export function VConsoleProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    window.addEventListener('vconsole-toggle' as any, handleToggle);
+    const listener = (event: Event) =>
+      handleToggle(event as CustomEvent<{ enabled: boolean }>);
+
+    window.addEventListener('vconsole-toggle', listener);
 
     return () => {
-      window.removeEventListener('vconsole-toggle' as any, handleToggle);
+      window.removeEventListener('vconsole-toggle', listener);
     };
   }, []);
 
@@ -51,23 +55,25 @@ async function initVConsole() {
 
   try {
     // vConsole uses UMD format, try different import methods
-    let VConsole: any;
+    let VConsoleCtor: typeof VConsole | undefined;
     try {
       const vconsoleModule = await import('vconsole');
-      VConsole = vconsoleModule.default || vconsoleModule;
+      VConsoleCtor = (vconsoleModule.default ||
+        vconsoleModule) as typeof VConsole;
     } catch (e) {
       // Fallback: use global VConsole if available
-      VConsole = (window as any).VConsole;
-      if (!VConsole) {
+      const globalVConsole = (window as typeof window & { VConsole?: typeof VConsole }).VConsole;
+      if (!globalVConsole) {
         throw new Error('VConsole not found');
       }
+      VConsoleCtor = globalVConsole;
     }
 
-    if (!VConsole) {
+    if (!VConsoleCtor) {
       throw new Error('VConsole class not available');
     }
 
-    vConsoleInstance = new VConsole({
+    vConsoleInstance = new VConsoleCtor({
       theme: 'dark',
       defaultPlugins: ['system', 'network', 'element', 'storage'],
       maxLogNumber: 1000,

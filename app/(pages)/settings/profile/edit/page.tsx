@@ -33,9 +33,13 @@ export default function EditProfilePage() {
         const userData = await fetchCurrentUser(session.lineUserId);
         setName(userData.displayName);
         setPictureUrl(userData.pictureUrl || '');
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load user:', err);
-        setError(err.error || 'Failed to load user');
+        const message =
+          typeof err === 'object' && err !== null && 'error' in err
+            ? (err as { error?: string }).error ?? 'Failed to load user'
+            : 'Failed to load user';
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -74,9 +78,13 @@ export default function EditProfilePage() {
       // Note: Add API call here when endpoint is available
       
       router.push('/settings');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update profile:', err);
-      setError(err.error || 'Failed to update profile');
+      const message =
+        typeof err === 'object' && err !== null && 'error' in err
+          ? (err as { error?: string }).error ?? 'Failed to update profile'
+          : 'Failed to update profile';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

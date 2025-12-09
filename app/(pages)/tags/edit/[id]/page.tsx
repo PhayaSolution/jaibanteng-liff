@@ -20,6 +20,13 @@ export default function EditTagPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === 'object' && err !== null && 'error' in err) {
+      return (err as { error?: string }).error ?? fallback;
+    }
+    return fallback;
+  };
+
   useEffect(() => {
     async function loadTag() {
       const session = getUserSession();
@@ -43,9 +50,9 @@ export default function EditTagPage() {
           setError('Tag not found');
           setTimeout(() => router.push('/tags'), 2000);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load tag:', err);
-        setError(err.error || 'Failed to load tag');
+        setError(getErrorMessage(err, 'Failed to load tag'));
       } finally {
         setIsLoading(false);
       }
@@ -80,9 +87,9 @@ export default function EditTagPage() {
       });
       
       router.push('/tags');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update tag:', err);
-      setError(err.error || 'Failed to update tag');
+      setError(getErrorMessage(err, 'Failed to update tag'));
     } finally {
       setIsSubmitting(false);
     }
@@ -107,9 +114,9 @@ export default function EditTagPage() {
     try {
       await deleteTag(session.lineUserId, id);
       router.push('/tags');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete tag:', err);
-      setError(err.error || 'Failed to delete tag');
+      setError(getErrorMessage(err, 'Failed to delete tag'));
       setIsSubmitting(false);
     }
   };

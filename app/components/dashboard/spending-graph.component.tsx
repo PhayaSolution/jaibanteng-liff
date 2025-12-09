@@ -16,8 +16,20 @@ interface SpendingGraphProps {
   currentMonthIndex?: number;
 }
 
+type ChartDotProps = {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  currentMonthIndex?: number;
+};
+
+type ActiveDotProps = {
+  cx?: number;
+  cy?: number;
+};
+
 // Custom dot component for current month
-const CustomDot = (props: any) => {
+const CustomDot = (props: ChartDotProps) => {
   const { cx, cy, index, currentMonthIndex } = props;
   if (index === currentMonthIndex && cx !== undefined && cy !== undefined) {
     return (
@@ -44,7 +56,7 @@ const CustomDot = (props: any) => {
 };
 
 // Custom active dot
-const CustomActiveDot = (props: any) => {
+const CustomActiveDot = (props: ActiveDotProps) => {
   const { cx, cy } = props;
   return (
     <g>
@@ -165,8 +177,10 @@ export default function SpendingGraph({ data, currentMonthIndex }: SpendingGraph
             stroke="url(#lineGradient)"
             strokeWidth={3}
             fill="url(#colorGradient)"
-            dot={(props: any) => {
-              const { key, ...restProps } = props;
+          dot={(props) => {
+            const { key, ...restProps } = props as ChartDotProps & {
+              key?: string | number;
+            };
               return (
                 <CustomDot
                   key={key}

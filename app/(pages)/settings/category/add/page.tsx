@@ -40,9 +40,13 @@ export default function AddCategoryPage() {
       });
       
       router.push('/settings/category');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add category:', err);
-      setError(err.error || 'Failed to add category');
+      const message =
+        typeof err === 'object' && err !== null && 'error' in err
+          ? (err as { error?: string }).error ?? 'Failed to add category'
+          : 'Failed to add category';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

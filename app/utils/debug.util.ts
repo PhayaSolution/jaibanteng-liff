@@ -4,9 +4,7 @@
 
 export type DebugType = 'info' | 'warning' | 'error' | 'success';
 
-export interface DebugData {
-  [key: string]: any;
-}
+export type DebugData = Record<string, unknown>;
 
 /**
  * Send debug message to LINE OA

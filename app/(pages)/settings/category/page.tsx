@@ -32,9 +32,13 @@ export default function CategoryPage() {
       try {
         const data = await fetchCategories(session.lineUserId);
         setCategories(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load categories:', err);
-        setError(err.error || 'Failed to load categories');
+        const message =
+          typeof err === 'object' && err !== null && 'error' in err
+            ? (err as { error?: string }).error ?? 'Failed to load categories'
+            : 'Failed to load categories';
+        setError(message);
       } finally {
         setIsLoading(false);
       }

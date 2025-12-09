@@ -3,6 +3,16 @@ import { prisma } from '@/app/lib/prisma';
 import { getLineUserIdFromHeaders, getUserByLineUserId } from '@/app/lib/auth';
 import { TransactionType, TransactionStatus, Tag } from '@/app/lib/types';
 
+type UpdateTransactionBody = Partial<{
+  type: TransactionType;
+  amount: number;
+  date: string;
+  name: string;
+  categoryId: string | null;
+  tagIds: string[];
+  status: TransactionStatus;
+}>;
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,7 +37,7 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const body = (await request.json()) as UpdateTransactionBody;
     const { type, amount, date, name, categoryId, tagIds, status } = body;
 
     // Check if transaction exists and belongs to user
@@ -104,7 +114,14 @@ export async function PUT(
     }
 
     // Update transaction
-    const updateData: any = {};
+    const updateData: {
+      type?: TransactionType;
+      amount?: number;
+      date?: Date;
+      name?: string;
+      categoryId?: string | null;
+      status?: TransactionStatus;
+    } = {};
     if (type !== undefined) updateData.type = type as TransactionType;
     if (amount !== undefined) updateData.amount = amount;
     if (date !== undefined) updateData.date = new Date(date);

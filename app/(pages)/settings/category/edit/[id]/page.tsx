@@ -22,6 +22,13 @@ export default function EditCategoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === 'object' && err !== null && 'error' in err) {
+      return (err as { error?: string }).error ?? fallback;
+    }
+    return fallback;
+  };
+
   useEffect(() => {
     async function loadCategory() {
       const session = getUserSession();
@@ -46,9 +53,9 @@ export default function EditCategoryPage() {
           setError('Category not found');
           setTimeout(() => router.push('/settings/category'), 2000);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load category:', err);
-        setError(err.error || 'Failed to load category');
+        setError(getErrorMessage(err, 'Failed to load category'));
       } finally {
         setIsLoading(false);
       }
@@ -84,9 +91,9 @@ export default function EditCategoryPage() {
       });
       
       router.push('/settings/category');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update category:', err);
-      setError(err.error || 'Failed to update category');
+      setError(getErrorMessage(err, 'Failed to update category'));
     } finally {
       setIsSubmitting(false);
     }
@@ -111,9 +118,9 @@ export default function EditCategoryPage() {
     try {
       await deleteCategory(session.lineUserId, id);
       router.push('/settings/category');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete category:', err);
-      setError(err.error || 'Failed to delete category');
+      setError(getErrorMessage(err, 'Failed to delete category'));
       setIsSubmitting(false);
     }
   };

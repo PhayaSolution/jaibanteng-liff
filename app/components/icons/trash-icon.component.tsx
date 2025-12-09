@@ -24,3 +24,5 @@ export const TrashIcon = ({ className = "w-6 h-6", ...props }: React.SVGProps<SV
 
 export default TrashIcon;
 
+
+

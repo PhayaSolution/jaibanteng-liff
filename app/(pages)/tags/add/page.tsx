@@ -37,9 +37,13 @@ export default function AddTagPage() {
       });
       
       router.push('/tags');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add tag:', err);
-      setError(err.error || 'Failed to add tag');
+      const message =
+        typeof err === 'object' && err !== null && 'error' in err
+          ? (err as { error?: string }).error ?? 'Failed to add tag'
+          : 'Failed to add tag';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
