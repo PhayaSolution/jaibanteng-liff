@@ -6,7 +6,7 @@ import { Trash2 } from 'lucide-react';
 import SettingsLayout from '@/app/components/settings/settings-layout.component';
 import SettingsSection from '@/app/components/settings/settings-section.component';
 import { fetchCategories, updateCategory, deleteCategory } from '@/app/lib/api';
-import { Category } from '@/app/lib/types';
+import { Category, TransactionType } from '@/app/lib/types';
 import { EmojiPicker } from '@/app/components/ui/emoji-picker';
 import { getUserSession } from '@/app/utils/storage.util';
 
@@ -17,6 +17,7 @@ export default function EditCategoryPage() {
   
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('');
+  const [type, setType] = useState<TransactionType>('EXPENSE');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +50,7 @@ export default function EditCategoryPage() {
           setCategory(foundCategory);
           setName(foundCategory.name);
           setEmoji(foundCategory.emoji || '');
+          setType(foundCategory.type);
         } else {
           setError('Category not found');
           setTimeout(() => router.push('/settings/category'), 2000);
@@ -87,6 +89,7 @@ export default function EditCategoryPage() {
     try {
       await updateCategory(session.lineUserId, id, {
         name: name.trim(),
+        type,
         emoji: emoji.trim() || undefined,
       });
       
@@ -149,7 +152,38 @@ export default function EditCategoryPage() {
     <SettingsLayout title="Edit Category">
       <form onSubmit={handleSubmit}>
         <SettingsSection title="Category Details">
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-3">
+                Type
+              </label>
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setType('EXPENSE')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                    type === 'EXPENSE'
+                      ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType('INCOME')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                    type === 'INCOME'
+                      ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Income
+                </button>
+              </div>
+            </div>
+
             {/* Name Field */}
             <div>
               <label
