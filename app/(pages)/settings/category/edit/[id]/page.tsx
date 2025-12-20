@@ -130,7 +130,7 @@ export default function EditCategoryPage() {
 
   if (isLoading) {
     return (
-      <SettingsLayout title="Edit Category">
+      <SettingsLayout title="Edit Category" backUrl="/settings/category">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto"></div>
         </div>
@@ -140,7 +140,7 @@ export default function EditCategoryPage() {
 
   if (error || !category) {
     return (
-      <SettingsLayout title="Edit Category">
+      <SettingsLayout title="Edit Category" backUrl="/settings/category">
         <div className="text-center py-12">
           <p className="text-red-600 dark:text-red-400">{error || 'Category not found'}</p>
         </div>
@@ -149,7 +149,7 @@ export default function EditCategoryPage() {
   }
 
   return (
-    <SettingsLayout title="Edit Category">
+    <SettingsLayout title="Edit Category" backUrl="/settings/category">
       <form onSubmit={handleSubmit}>
         <SettingsSection title="Category Details">
           <div className="space-y-6">

@@ -56,7 +56,7 @@ export default function AddCategoryPage() {
   };
 
   return (
-    <SettingsLayout title="Add Category">
+    <SettingsLayout title="Add Category" backUrl="/settings/category">
       <form onSubmit={handleSubmit}>
         <SettingsSection title="Category Details">
           <div className="space-y-6">

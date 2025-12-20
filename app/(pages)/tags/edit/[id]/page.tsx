@@ -123,7 +123,7 @@ export default function EditTagPage() {
 
   if (isLoading) {
     return (
-      <SettingsLayout title="Edit Tag">
+      <SettingsLayout title="Edit Tag" backUrl="/tags">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto"></div>
         </div>
@@ -133,7 +133,7 @@ export default function EditTagPage() {
 
   if (error || !tag) {
     return (
-      <SettingsLayout title="Edit Tag">
+      <SettingsLayout title="Edit Tag" backUrl="/tags">
         <div className="text-center py-12">
           <p className="text-red-600 dark:text-red-400">{error || 'Tag not found'}</p>
         </div>
@@ -142,7 +142,7 @@ export default function EditTagPage() {
   }
 
   return (
-    <SettingsLayout title="Edit Tag">
+    <SettingsLayout title="Edit Tag" backUrl="/tags">
       <form onSubmit={handleSubmit}>
         <SettingsSection title="Tag Details">
           {/* Name Field */}

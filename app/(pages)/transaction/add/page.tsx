@@ -49,7 +49,7 @@ export default function AddTransactionPage() {
 
       try {
         const [categoriesData, tagsData] = await Promise.all([
-          fetchCategories(session.lineUserId, type.toUpperCase() as any),
+          fetchCategories(session.lineUserId, type === 'income' ? 'INCOME' : 'EXPENSE'),
           fetchTags(session.lineUserId),
         ]);
 

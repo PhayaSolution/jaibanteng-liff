@@ -50,7 +50,7 @@ export default function AddTagPage() {
   };
 
   return (
-    <SettingsLayout title="Add Tag">
+    <SettingsLayout title="Add Tag" backUrl="/tags">
       <form onSubmit={handleSubmit}>
         <SettingsSection title="Tag Details">
           {/* Name Field */}

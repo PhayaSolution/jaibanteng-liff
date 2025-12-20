@@ -92,7 +92,7 @@ export default function EditProfilePage() {
 
   if (isLoading) {
     return (
-      <SettingsLayout title="Edit Profile">
+      <SettingsLayout title="Edit Profile" backUrl="/settings">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto"></div>
         </div>
@@ -101,7 +101,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <SettingsLayout title="Edit Profile">
+    <SettingsLayout title="Edit Profile" backUrl="/settings">
       <form onSubmit={handleSubmit}>
         {/* Avatar Preview */}
         <div className="flex flex-col items-center mb-8">

@@ -69,6 +69,7 @@ export default function TagsPage() {
     <SettingsLayout 
       title="Tags" 
       actionButton={AddButton}
+      backUrl="/settings"
     >
       {/* Search Bar */}
       <div className="mb-6 relative">

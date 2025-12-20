@@ -27,7 +27,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, emoji } = body;
+    const { name, emoji, type } = body;
 
     // Check if category exists and belongs to user
     const existingCategory = await prisma.category.findFirst({
@@ -59,6 +59,7 @@ export async function PUT(
       data: {
         ...(name !== undefined && { name: name.trim() }),
         ...(emoji !== undefined && { emoji: emoji?.trim() || null }),
+        ...(type !== undefined && { type: type as any }),
       },
     });
 
