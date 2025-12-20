@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { User as UserIcon, List, Tags, LogOut, ChevronRight } from 'lucide-react';
+import { User as UserIcon, List, Tags, LogOut, ChevronRight, PieChart } from 'lucide-react';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
 import SettingsLayout from '@/app/components/settings/settings-layout.component';
 import SettingsSection from '@/app/components/settings/settings-section.component';
@@ -98,6 +98,12 @@ export default function SettingsPage() {
 
       {/* Main Settings */}
       <SettingsSection title="General">
+        <SettingsListItem
+          title="Category Breakdown"
+          description="View spending statistics by category"
+          icon={<PieChart className="w-5 h-5" />}
+          href="/charts"
+        />
         <SettingsListItem
           title="Categories"
           description="Manage spending categories"

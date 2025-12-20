@@ -29,20 +29,19 @@ export default function LineLogin() {
         });
 
         if (!initialized) {
-          throw new Error('ไม่สามารถ initialize LIFF ได้');
+          throw new Error('Could not initialize LIFF');
         }
 
-        // ดึงข้อมูล user profile
+        // Fetch user profile
         const profile = await getLiffProfile();
 
         if (!profile) {
-          // ถ้า profile เป็น null แสดงว่า user ยังไม่ได้ login
-          // getLiffProfile จะเรียก liff.login() ให้อัตโนมัติ
-          // และจะ redirect กลับมาหลัง login เสร็จ
+          // If profile is null, user is not logged in.
+          // getLiffProfile calls liff.login() automatically.
           return;
         }
 
-        // แสดงข้อมูล user
+        // Show user info
         setUser({
           userId: profile.userId,
           displayName: profile.displayName,
@@ -53,7 +52,7 @@ export default function LineLogin() {
         });
         setIsLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setIsLoading(false);
       }
     };
@@ -64,7 +63,7 @@ export default function LineLogin() {
   if (isLoading) {
     return (
       <div className="p-4">
-        <p>กำลังโหลด...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -72,7 +71,7 @@ export default function LineLogin() {
   if (error) {
     return (
       <div className="p-4 text-red-500">
-        <p>เกิดข้อผิดพลาด: {error}</p>
+        <p>Error: {error}</p>
       </div>
     );
   }
@@ -80,20 +79,20 @@ export default function LineLogin() {
   if (!user) {
     return (
       <div className="p-4">
-        <p>กำลัง login...</p>
+        <p>Logging in...</p>
       </div>
     );
   }
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">ข้อมูล User</h2>
+      <h2 className="text-xl font-bold mb-4">User Information</h2>
       <div className="space-y-2">
         <p><strong>User ID:</strong> {user.userId}</p>
         <p><strong>Display Name:</strong> {user.displayName}</p>
         {user.pictureUrl && (
           <div>
-            <strong>รูปภาพ:</strong>
+            <strong>Picture:</strong>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={user.pictureUrl} alt={user.displayName} className="w-20 h-20 rounded-full mt-2" />
           </div>

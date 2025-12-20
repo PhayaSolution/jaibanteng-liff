@@ -22,8 +22,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+
     const categories = await prisma.category.findMany({
-      where: { userId: user.id },
+      where: { 
+        userId: user.id,
+        ...(type ? { type: type as any } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -58,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, emoji } = body;
+    const { name, emoji, type } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
@@ -72,6 +78,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         name: name.trim(),
         emoji: emoji?.trim() || null,
+        type: type || 'EXPENSE',
       },
     });
 

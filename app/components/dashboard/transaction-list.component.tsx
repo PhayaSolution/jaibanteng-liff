@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 
 import { TrashIcon } from '@/app/components/icons';
 
@@ -36,7 +36,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
   const handleDelete = async (transaction: Transaction) => {
     if (loadingIds.has(transaction.id)) return;
     
-    if (!confirm('คุณต้องการลบรายการนี้หรือไม่?')) return;
+    if (!confirm('Do you want to delete this item?')) return;
     
     setLoadingIds(prev => new Set(prev).add(transaction.id));
     try {
@@ -80,11 +80,11 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
               if (transaction.date) {
                 try {
                   const dateObj = new Date(transaction.date);
-                  const timeFromDate = format(dateObj, 'HH:mm', { locale: th });
+                  const timeFromDate = format(dateObj, 'HH:mm', { locale: enUS });
                   
                   // If date has no time (00:00), use createdAt instead
                   if (timeFromDate === '00:00' && transaction.createdAt) {
-                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                   } else {
                     timeDisplay = timeFromDate;
                   }
@@ -93,7 +93,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                   // Fallback to createdAt if date parsing fails
                   if (transaction.createdAt) {
                     try {
-                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                     } catch (e2) {
                       console.error('Error formatting createdAt:', e2);
                     }
@@ -102,7 +102,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
               } else if (transaction.createdAt) {
                 // Fallback to createdAt if no date
                 try {
-                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                 } catch (e) {
                   console.error('Error formatting createdAt:', e);
                 }
