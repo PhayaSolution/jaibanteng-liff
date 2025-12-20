@@ -72,7 +72,7 @@ export default function NumericKeypad({
         onClick={onConfirm}
         className="w-full py-3 rounded-xl bg-black text-white font-semibold text-base shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
       >
-        <span>บันทึก</span>
+        <span>Save Transaction</span>
         <Check className="w-4 h-4" />
       </button>
     </div>

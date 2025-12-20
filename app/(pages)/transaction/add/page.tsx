@@ -49,7 +49,7 @@ export default function AddTransactionPage() {
 
       try {
         const [categoriesData, tagsData] = await Promise.all([
-          fetchCategories(session.lineUserId),
+          fetchCategories(session.lineUserId, type.toUpperCase() as any),
           fetchTags(session.lineUserId),
         ]);
 
@@ -68,7 +68,7 @@ export default function AddTransactionPage() {
     }
 
     loadData();
-  }, [router]);
+  }, [router, type]);
 
   const handleNumberClick = (value: string) => {
     if (value === '.') {
@@ -173,7 +173,10 @@ export default function AddTransactionPage() {
           
           <div className="flex bg-gray-100/80 p-1 rounded-full backdrop-blur-sm">
             <button
-              onClick={() => setType('income')}
+              onClick={() => {
+                setType('income');
+                setSelectedCategory(null);
+              }}
               className={`
                 px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
                 ${
@@ -183,10 +186,13 @@ export default function AddTransactionPage() {
                 }
               `}
             >
-              รายรับ
+              Income
             </button>
             <button
-              onClick={() => setType('expense')}
+              onClick={() => {
+                setType('expense');
+                setSelectedCategory(null);
+              }}
               className={`
                 px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
                 ${
@@ -196,7 +202,7 @@ export default function AddTransactionPage() {
                 }
               `}
             >
-              รายจ่าย
+              Expense
             </button>
           </div>
           
@@ -243,7 +249,7 @@ export default function AddTransactionPage() {
                 {amount}
               </span>
             </div>
-            <span className="text-sm text-gray-400 font-medium mt-2">บาท</span>
+            <span className="text-sm text-gray-400 font-medium mt-2">THB</span>
           </div>
         </div>
 

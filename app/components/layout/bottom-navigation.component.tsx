@@ -33,16 +33,14 @@ export default function BottomNavigation() {
         >
           <Receipt className="w-6 h-6" />
         </button>
+
         <button
           onClick={() => router.push('/transaction/add')}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-            isActive('/transaction/add')
-              ? 'bg-black dark:bg-white text-white dark:text-black'
-              : 'bg-black dark:bg-white text-white dark:text-black'
-          } shadow-lg`}
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors bg-black dark:bg-white text-white dark:text-black shadow-lg`}
         >
           <Plus className="w-6 h-6" />
         </button>
+
         <button
           onClick={() => router.push('/settings')}
           className={`p-3 transition-colors ${

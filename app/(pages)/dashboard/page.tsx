@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, addDays } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
 import SpendingGraph from '@/app/components/dashboard/spending-graph.component';
@@ -16,7 +16,7 @@ import { Transaction } from '@/app/lib/types';
 import { getUserSession } from '@/app/utils/storage.util';
 
 type TabType = 'dashboard' | 'task';
-type PeriodType = 'วันนี้' | 'อาทิตย์นี้' | 'เดือนนี้' | 'ปีนี้';
+type PeriodType = 'Today' | 'This Week' | 'This Month' | 'This Year';
 
 interface TransactionGroup {
   date: string;
@@ -58,18 +58,18 @@ function getDateRange(period: PeriodType): { startDate: string; endDate: string 
   let end: Date = endOfDay(now);
 
   switch (period) {
-    case 'วันนี้':
+    case 'Today':
       start = startOfDay(now);
       break;
-    case 'อาทิตย์นี้':
+    case 'This Week':
       start = startOfWeek(now, { weekStartsOn: 1 }); // Monday
       end = endOfWeek(now, { weekStartsOn: 1 });
       break;
-    case 'เดือนนี้':
+    case 'This Month':
       start = startOfMonth(now);
       end = endOfMonth(now);
       break;
-    case 'ปีนี้':
+    case 'This Year':
       start = startOfYear(now);
       end = endOfYear(now);
       break;
@@ -136,7 +136,7 @@ function transformTransactionsToGroups(transactions: Transaction[]): Transaction
   const groupsMap = new Map<string, TransactionGroup>();
 
   transactions.forEach((tx) => {
-    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: enUS });
     
     if (!groupsMap.has(date)) {
       groupsMap.set(date, {
@@ -181,7 +181,7 @@ function transformTransactionsToTaskGroups(transactions: Transaction[]): TaskGro
   const groupsMap = new Map<string, TaskGroup>();
 
   transactions.forEach((tx) => {
-    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: enUS });
     
     if (!groupsMap.has(date)) {
       groupsMap.set(date, {
@@ -230,7 +230,7 @@ function transformSpendingDataForGraph(
   }
 
   switch (period) {
-    case 'วันนี้': {
+    case 'Today': {
       // For today, show all 24 hours (0-23)
       // Convert ISO date strings from API to local timezone and group by hour
       const hourMap = new Map<number, number>();
@@ -262,7 +262,7 @@ function transformSpendingDataForGraph(
       
       return result;
     }
-    case 'อาทิตย์นี้': {
+    case 'This Week': {
       // Fill in missing days of the week and aggregate balance by day name
       const now = new Date();
       const weekStart = startOfWeek(now, { weekStartsOn: 1 });
@@ -270,14 +270,14 @@ function transformSpendingDataForGraph(
       const dataMap = new Map<string, number>();
       
       spendingData.forEach((item) => {
-        const dateKey = format(new Date(item.date), 'EEE', { locale: th });
+        const dateKey = format(new Date(item.date), 'EEE', { locale: enUS });
         const currentValue = dataMap.get(dateKey) || 0;
         dataMap.set(dateKey, currentValue + (item.income - item.expense));
       });
       
       const result: Array<{ month: string; value: number }> = [];
       for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
-        const dayKey = format(d, 'EEE', { locale: th });
+        const dayKey = format(d, 'EEE', { locale: enUS });
         result.push({
           month: dayKey,
           value: dataMap.get(dayKey) || 0,
@@ -285,7 +285,7 @@ function transformSpendingDataForGraph(
       }
       return result;
     }
-    case 'เดือนนี้': {
+    case 'This Month': {
       // Fill in missing days of the month and aggregate balance by day number
       const now = new Date();
       const monthStart = startOfMonth(now);
@@ -293,14 +293,14 @@ function transformSpendingDataForGraph(
       const dataMap = new Map<string, number>();
       
       spendingData.forEach((item) => {
-        const dateKey = format(new Date(item.date), 'd', { locale: th });
+        const dateKey = format(new Date(item.date), 'd', { locale: enUS });
         const currentValue = dataMap.get(dateKey) || 0;
         dataMap.set(dateKey, currentValue + (item.income - item.expense));
       });
       
       const result: Array<{ month: string; value: number }> = [];
       for (let d = new Date(monthStart); d <= monthEnd; d.setDate(d.getDate() + 1)) {
-        const dayKey = format(d, 'd', { locale: th });
+        const dayKey = format(d, 'd', { locale: enUS });
         result.push({
           month: dayKey,
           value: dataMap.get(dayKey) || 0,
@@ -308,7 +308,7 @@ function transformSpendingDataForGraph(
       }
       return result;
     }
-    case 'ปีนี้': {
+    case 'This Year': {
       // Group by month and aggregate balance, fill in missing months
       const now = new Date();
       const yearStart = startOfYear(now);
@@ -316,14 +316,14 @@ function transformSpendingDataForGraph(
       const dataMap = new Map<string, number>();
       
       spendingData.forEach((item) => {
-        const monthKey = format(new Date(item.date), 'MMM', { locale: th });
+        const monthKey = format(new Date(item.date), 'MMM', { locale: enUS });
         const currentValue = dataMap.get(monthKey) || 0;
         dataMap.set(monthKey, currentValue + (item.income - item.expense));
       });
       
       const result: Array<{ month: string; value: number }> = [];
       for (let d = new Date(yearStart); d <= yearEnd; d.setMonth(d.getMonth() + 1)) {
-        const monthKey = format(d, 'MMM', { locale: th });
+        const monthKey = format(d, 'MMM', { locale: enUS });
         result.push({
           month: monthKey,
           value: dataMap.get(monthKey) || 0,
@@ -335,7 +335,7 @@ function transformSpendingDataForGraph(
       return spendingData.map((item) => {
         const date = new Date(item.date);
         return {
-          month: format(date, 'MMM', { locale: th }),
+          month: format(date, 'MMM', { locale: enUS }),
           value: item.income - item.expense,
         };
       });
@@ -344,7 +344,7 @@ function transformSpendingDataForGraph(
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('วันนี้');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('Today');
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   
   // Pagination state
@@ -423,7 +423,7 @@ export default function DashboardPage() {
 
       // For month and year periods, load all data at once (no pagination)
       // For today and week periods, use pagination (10 days per page)
-      const shouldPaginate = period === 'วันนี้' || period === 'อาทิตย์นี้';
+      const shouldPaginate = period === 'Today' || period === 'This Week';
       
       let pageStartDate: string;
       let pageEndDate: string;
@@ -607,16 +607,16 @@ export default function DashboardPage() {
 
     // Find all transactions for this date that are not already DONE
     const transactionsForDate = transactions.filter((tx) => {
-      const txDate = format(new Date(tx.date), 'dd/MM/yyyy', { locale: th });
+      const txDate = format(new Date(tx.date), 'dd/MM/yyyy', { locale: enUS });
       return txDate === date && tx.status !== 'DONE';
     });
 
     if (transactionsForDate.length === 0) {
-      alert('ไม่มีรายการที่ต้องทำ Done สำหรับวันนี้');
+      alert('No tasks to mark as done for today');
       return;
     }
 
-    if (!confirm(`คุณต้องการทำ Done ทั้งหมด ${transactionsForDate.length} รายการสำหรับวันที่ ${date} หรือไม่?`)) {
+    if (!confirm(`Do you want to mark all ${transactionsForDate.length} items as done for ${date}?`)) {
       return;
     }
 
@@ -631,7 +631,7 @@ export default function DashboardPage() {
       // Update transactions in local state
       setTransactions((prev) =>
         prev.map((t) => {
-          const txDate = format(new Date(t.date), 'dd/MM/yyyy', { locale: th });
+          const txDate = format(new Date(t.date), 'dd/MM/yyyy', { locale: enUS });
           if (txDate === date && t.status !== 'DONE') {
             return { ...t, status: 'DONE' as const };
           }
@@ -663,11 +663,11 @@ export default function DashboardPage() {
     });
 
     if (transactionsInPeriod.length === 0) {
-      alert(`ไม่มีรายการที่ต้องทำ Done สำหรับ${selectedPeriod}`);
+      alert(`No tasks to mark as done for ${selectedPeriod}`);
       return;
     }
 
-    if (!confirm(`คุณต้องการทำ Done ทั้งหมด ${transactionsInPeriod.length} รายการสำหรับ${selectedPeriod} หรือไม่?`)) {
+    if (!confirm(`Do you want to mark all ${transactionsInPeriod.length} items as done for ${selectedPeriod}?`)) {
       return;
     }
 
@@ -712,10 +712,10 @@ export default function DashboardPage() {
                 onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
                 className="appearance-none px-4 py-2 pr-10 rounded-full border-0 bg-white dark:bg-zinc-900 shadow-sm text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all cursor-pointer focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none"
               >
-                <option value="วันนี้">วันนี้</option>
-                <option value="อาทิตย์นี้">อาทิตย์นี้</option>
-                <option value="เดือนนี้">เดือนนี้</option>
-                <option value="ปีนี้">ปีนี้</option>
+                <option value="Today">Today</option>
+                <option value="This Week">This Week</option>
+                <option value="This Month">This Month</option>
+                <option value="This Year">This Year</option>
               </select>
               <svg
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
@@ -743,7 +743,7 @@ export default function DashboardPage() {
 
           {/* Balance - Centered */}
           <div className="text-center py-2">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">ยอดเงินคงเหลือ</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Available Balance</span>
             {isLoadingStats ? (
               <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white animate-pulse">
                 ...
@@ -795,7 +795,7 @@ export default function DashboardPage() {
                 <div className="w-full min-w-[600px] lg:min-w-full">
                   {isLoadingStats ? (
                     <div className="text-center py-12">
-                      <p className="text-gray-500 dark:text-gray-400">กำลังโหลดกราฟ...</p>
+                      <p className="text-gray-500 dark:text-gray-400">Loading graph...</p>
                     </div>
                   ) : (
                     <SpendingGraph 
@@ -811,7 +811,7 @@ export default function DashboardPage() {
             <div>
               {isLoadingList ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">กำลังโหลดรายการ...</p>
+                  <p className="text-gray-500 dark:text-gray-400">Loading transactions...</p>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -835,14 +835,14 @@ export default function DashboardPage() {
                         disabled={isLoadingMore}
                         className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
+                        {isLoadingMore ? 'Loading...' : 'Load more'}
                       </button>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">ไม่มีรายการธุรกรรม</p>
+                  <p className="text-gray-500 dark:text-gray-400">No transactions found</p>
                 </div>
               )}
             </div>
@@ -853,7 +853,7 @@ export default function DashboardPage() {
             <div>
               {isLoadingList ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">กำลังโหลดรายการ...</p>
+                  <p className="text-gray-500 dark:text-gray-400">Loading tasks...</p>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -879,14 +879,14 @@ export default function DashboardPage() {
                         disabled={isLoadingMore}
                         className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isLoadingMore ? 'กำลังโหลด...' : 'ดูเพิ่มเติม'}
+                        {isLoadingMore ? 'Loading...' : 'Load more'}
                       </button>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">ไม่มีรายการงาน</p>
+                  <p className="text-gray-500 dark:text-gray-400">No tasks found</p>
                 </div>
               )}
             </div>

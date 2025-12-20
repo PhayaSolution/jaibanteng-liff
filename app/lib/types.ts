@@ -15,6 +15,7 @@ export interface Category {
   id: string;
   userId: string;
   name: string;
+  type: TransactionType;
   emoji?: string | null;
   createdAt: string;
   updatedAt: string;

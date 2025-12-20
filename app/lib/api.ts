@@ -57,8 +57,9 @@ export async function fetchCurrentUser(lineUserId: string): Promise<User> {
 
 // ==================== Category API ====================
 
-export async function fetchCategories(lineUserId: string): Promise<Category[]> {
-  const data = await apiRequest<{ categories: Category[] }>('/api/categories', {
+export async function fetchCategories(lineUserId: string, type?: TransactionType): Promise<Category[]> {
+  const path = type ? `/api/categories?type=${type}` : '/api/categories';
+  const data = await apiRequest<{ categories: Category[] }>(path, {
     method: 'GET',
     lineUserId,
   });
@@ -67,7 +68,7 @@ export async function fetchCategories(lineUserId: string): Promise<Category[]> {
 
 export async function createCategory(
   lineUserId: string,
-  payload: { name: string; emoji?: string }
+  payload: { name: string; type: TransactionType; emoji?: string }
 ): Promise<Category> {
   const data = await apiRequest<{ category: Category }>('/api/categories', {
     method: 'POST',
@@ -80,7 +81,7 @@ export async function createCategory(
 export async function updateCategory(
   lineUserId: string,
   id: string,
-  payload: { name?: string; emoji?: string }
+  payload: { name?: string; type?: TransactionType; emoji?: string }
 ): Promise<Category> {
   const data = await apiRequest<{ category: Category }>(`/api/categories/${id}`, {
     method: 'PUT',

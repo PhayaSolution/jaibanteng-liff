@@ -156,6 +156,14 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
+
+      // Validate category type matches transaction type
+      if (category.type !== type) {
+        return NextResponse.json(
+          { error: `Category type mismatch: ${category.type} vs ${type}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate tags belong to user if provided

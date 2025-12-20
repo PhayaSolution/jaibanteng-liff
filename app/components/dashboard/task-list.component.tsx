@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 
 import { TrashIcon } from '@/app/components/icons';
 
@@ -119,7 +119,7 @@ export default function TaskList({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             )}
-            Done ทั้งหมด{selectedPeriod}
+            Done All {selectedPeriod}
           </button>
         </div>
       )}
@@ -152,7 +152,7 @@ export default function TaskList({
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   )}
-                  Done ทั้งวัน
+                  Mark as Done
                 </button>
               )}
             </div>
@@ -186,11 +186,11 @@ export default function TaskList({
               if (transaction.date) {
                 try {
                   const dateObj = new Date(transaction.date);
-                  const timeFromDate = format(dateObj, 'HH:mm', { locale: th });
+                  const timeFromDate = format(dateObj, 'HH:mm', { locale: enUS });
                   
                   // If date has no time (00:00), use createdAt instead
                   if (timeFromDate === '00:00' && transaction.createdAt) {
-                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                   } else {
                     timeDisplay = timeFromDate;
                   }
@@ -199,7 +199,7 @@ export default function TaskList({
                   // Fallback to createdAt if date parsing fails
                   if (transaction.createdAt) {
                     try {
-                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                     } catch (e2) {
                       console.error('Error formatting createdAt:', e2);
                     }
@@ -208,7 +208,7 @@ export default function TaskList({
               } else if (transaction.createdAt) {
                 // Fallback to createdAt if no date
                 try {
-                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: th });
+                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                 } catch (e) {
                   console.error('Error formatting createdAt:', e);
                 }

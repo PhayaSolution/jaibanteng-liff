@@ -2,6 +2,7 @@ export interface Category {
   id: string;
   name: string;
   emoji: string;
+  type: 'INCOME' | 'EXPENSE';
 }
 
 export interface Tag {
@@ -24,7 +25,11 @@ export function getCategories(): Category[] {
   
   try {
     const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const categories: Category[] = stored ? JSON.parse(stored) : [];
+    return categories.map(cat => ({
+      ...cat,
+      type: cat.type || 'EXPENSE'
+    }));
   } catch (error) {
     console.error('Failed to get categories:', error);
     return [];
@@ -46,6 +51,7 @@ export function addCategory(category: Omit<Category, 'id'>): Category {
   const newCategory: Category = {
     ...category,
     id: Date.now().toString(),
+    type: category.type || 'EXPENSE',
   };
   categories.push(newCategory);
   saveCategories(categories);
