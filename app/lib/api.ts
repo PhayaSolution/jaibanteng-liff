@@ -149,6 +149,11 @@ export interface FetchTransactionsParams {
   endDate?: string;
   limit?: number;
   offset?: number;
+  search?: string;
+  categoryId?: string;
+  tagIds?: string[];
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 export async function fetchTransactions(
@@ -162,6 +167,11 @@ export async function fetchTransactions(
   if (params?.endDate) searchParams.append('endDate', params.endDate);
   if (params?.limit) searchParams.append('limit', params.limit.toString());
   if (params?.offset) searchParams.append('offset', params.offset.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  if (params?.categoryId) searchParams.append('categoryId', params.categoryId);
+  if (params?.tagIds && params.tagIds.length > 0) searchParams.append('tagIds', params.tagIds.join(','));
+  if (params?.minAmount !== undefined) searchParams.append('minAmount', params.minAmount.toString());
+  if (params?.maxAmount !== undefined) searchParams.append('maxAmount', params.maxAmount.toString());
 
   const queryString = searchParams.toString();
   const path = `/api/transactions${queryString ? `?${queryString}` : ''}`;

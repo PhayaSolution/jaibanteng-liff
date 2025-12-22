@@ -28,15 +28,15 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') as TransactionStatus | null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const categoryId = searchParams.get('categoryId');
+    const tagIds = searchParams.get('tagIds')?.split(',').filter(Boolean);
+    const minAmount = searchParams.get('minAmount');
+    const maxAmount = searchParams.get('maxAmount');
+    const search = searchParams.get('search');
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
 
-    const where: {
-      userId: string;
-      type?: TransactionType;
-      status?: TransactionStatus;
-      date?: { gte?: Date; lte?: Date };
-    } = {
+    const where: any = {
       userId: user.id,
     };
 
@@ -58,6 +58,36 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    if (tagIds && tagIds.length > 0) {
+      where.tags = {
+        some: {
+          tagId: { in: tagIds },
+        },
+      };
+    }
+
+    if (minAmount || maxAmount) {
+      where.amount = {};
+      if (minAmount) {
+        where.amount.gte = parseFloat(minAmount);
+      }
+      if (maxAmount) {
+        where.amount.lte = parseFloat(maxAmount);
+      }
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { category: { name: { contains: search, mode: 'insensitive' } } },
+        { tags: { some: { tag: { name: { contains: search, mode: 'insensitive' } } } } },
+      ];
+    }
+
     const transactions = await prisma.transaction.findMany({
       where,
       include: {
@@ -74,9 +104,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the response to include tags as an array
-    const transformedTransactions = transactions.map((transaction: typeof transactions[0]) => ({
+    const transformedTransactions = transactions.map((transaction: any) => ({
       ...transaction,
-      tags: transaction.tags.map((tt: typeof transactions[0]['tags'][0]) => tt.tag),
+      tags: transaction.tags.map((tt: any) => tt.tag),
     }));
 
     return NextResponse.json({ transactions: transformedTransactions });
