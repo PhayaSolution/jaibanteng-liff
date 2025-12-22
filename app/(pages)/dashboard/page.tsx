@@ -312,6 +312,7 @@ export default function DashboardPage() {
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
   const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBudgetExpanded, setIsBudgetExpanded] = useState<boolean>(false);
 
   // Load stats for the full period (chart and balance)
   const loadStatsForPeriod = useCallback(async (period: PeriodType) => {
@@ -755,13 +756,28 @@ export default function DashboardPage() {
             {/* Budget Progress */}
             {categoryStats.length > 0 && (
               <div className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-5">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-                  Monthly Budgets
-                </h3>
-                <BudgetProgress 
-                  categories={categoryStats} 
-                  isLoading={isLoadingStats} 
-                />
+                <button 
+                  onClick={() => setIsBudgetExpanded(!isBudgetExpanded)}
+                  className="w-full flex items-center justify-between"
+                >
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                    Monthly Budgets
+                  </h3>
+                  <div className={`transition-transform duration-200 ${isBudgetExpanded ? 'rotate-180' : ''}`}>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                
+                {isBudgetExpanded && (
+                  <div className="mt-4">
+                    <BudgetProgress 
+                      categories={categoryStats} 
+                      isLoading={isLoadingStats} 
+                    />
+                  </div>
+                )}
               </div>
             )}
 
