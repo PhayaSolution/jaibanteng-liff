@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import SettingsLayout from '@/app/components/settings/settings-layout.component';
 import SettingsSection from '@/app/components/settings/settings-section.component';
 import { createCategory } from '@/app/lib/api';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { TransactionType } from '@/app/lib/types';
 import { EmojiPicker } from '@/app/components/ui/emoji-picker';
 import { getUserSession } from '@/app/utils/storage.util';
@@ -67,28 +68,34 @@ export default function AddCategoryPage() {
               <label className="block text-sm font-medium text-black dark:text-white mb-3">
                 Type
               </label>
-              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setType('EXPENSE')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                  className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     type === 'EXPENSE'
-                      ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                      ? 'border-red-500 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 shadow-sm'
+                      : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
                   }`}
                 >
-                  Expense
+                  <div className={`p-2 rounded-full ${type === 'EXPENSE' ? 'bg-red-100 dark:bg-red-900/50' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                    <TrendingDown className="w-6 h-6" />
+                  </div>
+                  <span className="text-sm font-bold">Expense</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setType('INCOME')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                  className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     type === 'INCOME'
-                      ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                      : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
                   }`}
                 >
-                  Income
+                  <div className={`p-2 rounded-full ${type === 'INCOME' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                    <TrendingUp className="w-6 h-6" />
+                  </div>
+                  <span className="text-sm font-bold">Income</span>
                 </button>
               </div>
             </div>
@@ -163,22 +170,37 @@ export default function AddCategoryPage() {
 
         {/* Preview */}
         {(name || emoji) && (
-          <SettingsSection title="Preview">
-            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 flex items-center justify-center text-4xl">
+          <SettingsSection title="Appearance Preview">
+            <div className="flex justify-center p-8 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 relative overflow-hidden group">
+              {/* Decorative background elements */}
+              <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 transition-colors ${type === 'INCOME' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+              <div className={`absolute -left-4 -bottom-4 w-24 h-24 rounded-full blur-3xl opacity-20 transition-colors ${type === 'INCOME' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+              
+              <div className="relative flex flex-col items-center gap-4">
+                <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-5xl shadow-xl transition-all group-hover:scale-110 ${
+                  type === 'INCOME' 
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30' 
+                    : 'bg-red-100 dark:bg-red-900/30'
+                }`}>
                   {emoji || '📁'}
                 </div>
-                <span className="text-sm font-medium text-black dark:text-white">
-                  {name || 'Category Name'}
-                </span>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-black dark:text-white">
+                    {name || 'Category Name'}
+                  </div>
+                  <div className={`text-xs font-semibold uppercase tracking-widest mt-1 ${
+                    type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'
+                  }`}>
+                    {type}
+                  </div>
+                </div>
               </div>
             </div>
           </SettingsSection>
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+          <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm border border-red-100 dark:border-red-900/50">
             {error}
           </div>
         )}
@@ -186,7 +208,7 @@ export default function AddCategoryPage() {
         <button
           type="submit"
           disabled={isSubmitting || !name.trim()}
-          className="w-full py-4 rounded-lg bg-black dark:bg-white text-white dark:text-black font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+          className="w-full py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-black text-lg hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-lg shadow-black/10 dark:shadow-white/5"
         >
           {isSubmitting ? 'Creating...' : 'Create Category'}
         </button>
