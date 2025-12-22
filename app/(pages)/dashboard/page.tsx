@@ -12,9 +12,10 @@ import TaskList from '@/app/components/dashboard/task-list.component';
 import BudgetProgress from '@/app/components/dashboard/budget-progress.component';
 import { SearchIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
-import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction } from '@/app/lib/api';
 import { Transaction } from '@/app/lib/types';
 import { getUserSession } from '@/app/utils/storage.util';
+import QuickAdd from '@/app/components/dashboard/quick-add.component';
+import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction, fetchFrequentTransactions, createTransaction, TransactionShortcut } from '@/app/lib/api';
 
 import { transformTransactionsToGroups, TransactionGroup } from '@/app/lib/utils';
 
@@ -313,6 +314,9 @@ export default function DashboardPage() {
   const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isBudgetExpanded, setIsBudgetExpanded] = useState<boolean>(false);
+  const [shortcuts, setShortcuts] = useState<TransactionShortcut[]>([]);
+  const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
+  const [isLoadingShortcuts, setIsLoadingShortcuts] = useState<boolean>(true);
 
   // Load stats for the full period (chart and balance)
   const loadStatsForPeriod = useCallback(async (period: PeriodType) => {
@@ -349,6 +353,23 @@ export default function DashboardPage() {
       setIsLoadingStats(false);
     }
   }, [router]);
+
+  // Load shortcuts
+  const loadShortcuts = useCallback(async () => {
+    const session = getUserSession();
+    if (!session?.lineUserId) return;
+
+    setIsLoadingShortcuts(true);
+    try {
+      const data = await fetchFrequentTransactions(session.lineUserId);
+      setShortcuts(data.shortcuts);
+      setLastTransaction(data.lastTransaction);
+    } catch (err) {
+      console.error('Failed to load shortcuts:', err);
+    } finally {
+      setIsLoadingShortcuts(false);
+    }
+  }, []);
 
   // Load initial transactions for the period (first 10-day page)
   const loadInitialTransactionsForPeriod = useCallback(async (period: PeriodType) => {
@@ -475,10 +496,11 @@ export default function DashboardPage() {
     setHasMore(false);
     setIsLoadingMore(false);
     
-    // Load stats and initial transactions in parallel
+    // Load shortcuts, stats and initial transactions in parallel
+    loadShortcuts();
     loadStatsForPeriod(selectedPeriod);
     loadInitialTransactionsForPeriod(selectedPeriod);
-  }, [selectedPeriod, loadStatsForPeriod, loadInitialTransactionsForPeriod]);
+  }, [selectedPeriod, loadStatsForPeriod, loadInitialTransactionsForPeriod, loadShortcuts]);
 
   const handleDeleteTransaction = async (transaction: { id: string }) => {
     const session = getUserSession();
@@ -645,6 +667,25 @@ export default function DashboardPage() {
     }
   };
 
+  const handleQuickAdd = (shortcut: {
+    name: string;
+    amount: number;
+    categoryId: string | null;
+    type: 'INCOME' | 'EXPENSE';
+  }) => {
+    const params = new URLSearchParams({
+      type: shortcut.type,
+      amount: shortcut.amount.toString(),
+      name: shortcut.name,
+    });
+    
+    if (shortcut.categoryId) {
+      params.append('categoryId', shortcut.categoryId);
+    }
+
+    router.push(`/transaction/add?${params.toString()}`);
+  };
+
   return (
     <SafeArea className="h-dvh bg-gray-50 dark:bg-black flex flex-col overflow-hidden">
       <Container className="py-4 pb-32 sm:pb-24 flex-1 overflow-y-auto min-h-0">
@@ -730,6 +771,16 @@ export default function DashboardPage() {
               Task
             </button>
           </div>
+        </div>
+
+        {/* Quick Add Section */}
+        <div className="mb-6">
+          <QuickAdd 
+            shortcuts={shortcuts} 
+            lastTransaction={lastTransaction} 
+            onSelect={handleQuickAdd}
+            isLoading={isLoadingShortcuts}
+          />
         </div>
 
         {/* Content based on active tab */}

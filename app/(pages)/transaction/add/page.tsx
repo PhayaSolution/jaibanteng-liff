@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Container from '@/app/components/layout/container.component';
@@ -21,10 +21,14 @@ import { getUserSession } from '@/app/utils/storage.util';
 
 type TransactionType = 'income' | 'expense';
 
-export default function AddTransactionPage() {
+function AddTransactionForm() {
   const router = useRouter();
-  const [type, setType] = useState<TransactionType>('expense');
-  const [amount, setAmount] = useState('0');
+  const searchParams = useSearchParams();
+  
+  const [type, setType] = useState<TransactionType>(
+    (searchParams.get('type')?.toLowerCase() as TransactionType) || 'expense'
+  );
+  const [amount, setAmount] = useState(searchParams.get('amount') || '0');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; type: 'category' | 'tag' } | null>(null);
@@ -34,6 +38,10 @@ export default function AddTransactionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initial params
+  const initialCategoryId = searchParams.get('categoryId');
+  const initialName = searchParams.get('name');
 
   useEffect(() => {
     async function loadData() {
@@ -55,6 +63,18 @@ export default function AddTransactionPage() {
 
         setCategories(categoriesData);
         setTags(tagsData);
+
+        // Pre-fill category if provided in URL
+        if (initialCategoryId) {
+          const found = categoriesData.find(c => c.id === initialCategoryId);
+          if (found) {
+            setSelectedCategory({
+              id: found.id,
+              name: `${found.emoji || '📁'} ${found.name}`,
+              type: 'category'
+            });
+          }
+        }
       } catch (err) {
         console.error('Failed to load categories/tags:', err);
         const errorObj = err as { error?: string };
@@ -68,7 +88,7 @@ export default function AddTransactionPage() {
     }
 
     loadData();
-  }, [router, type]);
+  }, [router, type, initialCategoryId]);
 
   const handleNumberClick = (value: string) => {
     if (value === '.') {
@@ -140,7 +160,7 @@ export default function AddTransactionPage() {
         type: type.toUpperCase() as 'INCOME' | 'EXPENSE',
         amount: amountNum,
         date: date.toISOString(),
-        name: selectedCategory?.name || 'Transaction',
+        name: initialName || selectedCategory?.name || 'Transaction',
         categoryId: selectedCategory?.id || null,
         tagIds: selectedTags.map(t => t.id),
         status: 'ACTIVE',
@@ -159,19 +179,19 @@ export default function AddTransactionPage() {
   };
 
   return (
-    <SafeArea className="h-dvh max-h-dvh bg-white flex flex-col overflow-hidden">
+    <SafeArea className="h-dvh max-h-dvh bg-white dark:bg-black flex flex-col overflow-hidden text-black dark:text-white">
       <Container className="flex flex-col h-full p-0 sm:p-0 md:p-0 relative">
         
         {/* 1. Header Section (Fixed Top) */}
         <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0 z-10">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-black hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 -ml-2 text-current hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
           >
             <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
           </button>
           
-          <div className="flex bg-gray-100/80 p-1 rounded-full backdrop-blur-sm">
+          <div className="flex bg-gray-100/80 dark:bg-zinc-900/80 p-1 rounded-full backdrop-blur-sm">
             <button
               onClick={() => {
                 setType('income');
@@ -181,8 +201,8 @@ export default function AddTransactionPage() {
                 px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
                 ${
                   type === 'income'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-zinc-500'
                 }
               `}
             >
@@ -197,8 +217,8 @@ export default function AddTransactionPage() {
                 px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
                 ${
                   type === 'expense'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-zinc-500'
                 }
               `}
             >
@@ -206,22 +226,20 @@ export default function AddTransactionPage() {
             </button>
           </div>
           
-          {/* Placeholder for balance to keep center alignment of toggle */}
           <div className="w-10"></div>
         </div>
 
         {/* 2. Main Content (Centered Amount) */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 pb-8">
           
-          {/* Date Trigger - Floating above amount */}
           <div className="mb-8">
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="h-auto py-2 px-4 rounded-full bg-gray-50 text-black font-medium text-sm border border-transparent hover:border-gray-200 hover:bg-gray-100 transition-all shadow-sm"
+                  className="h-auto py-2 px-4 rounded-full bg-gray-50 dark:bg-zinc-900 text-current font-medium text-sm border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all shadow-sm"
                 >
-                  <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
+                  <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
                   <span>
                     {date ? format(date, 'd MMMM yyyy') : 'Select date'}
                   </span>
@@ -236,27 +254,30 @@ export default function AddTransactionPage() {
                     setOpen(false);
                   }}
                   initialFocus
-                  className="rounded-xl border bg-white"
+                  className="rounded-xl border bg-white dark:bg-zinc-950"
                 />
               </PopoverContent>
             </Popover>
           </div>
 
-          {/* Hero Amount */}
           <div className="flex flex-col items-center relative w-full animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-baseline gap-1">
-              <span className="text-6xl sm:text-7xl font-bold text-black tracking-tighter leading-none">
+              <span className="text-6xl sm:text-7xl font-bold text-current tracking-tighter leading-none">
                 {amount}
               </span>
             </div>
             <span className="text-sm text-gray-400 font-medium mt-2">THB</span>
+            {initialName && (
+              <span className="mt-4 px-3 py-1 rounded-full bg-gray-100 dark:bg-zinc-900 text-xs font-medium text-gray-500">
+                {initialName}
+              </span>
+            )}
           </div>
         </div>
 
         {/* 3. Bottom Controls (Category + Keypad) */}
-        <div className="px-4 pb-6 pt-2 shrink-0 bg-white flex flex-col gap-5 z-10 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] border-t border-gray-50/50">
+        <div className="px-4 pb-6 pt-2 shrink-0 bg-white dark:bg-black flex flex-col gap-5 z-10 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] border-t border-gray-50/50 dark:border-zinc-900/50">
           
-          {/* Category Tags Area */}
           <div className="w-full min-h-[44px]">
              {isLoading ? (
               <div className="flex items-center justify-center py-2">
@@ -279,15 +300,25 @@ export default function AddTransactionPage() {
             )}
           </div>
 
-          {/* Keypad */}
           <NumericKeypad
             onNumberClick={handleNumberClick}
             onDelete={handleDelete}
             onConfirm={handleConfirm}
           />
         </div>
-
       </Container>
     </SafeArea>
+  );
+}
+
+export default function AddTransactionPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-black">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+      </div>
+    }>
+      <AddTransactionForm />
+    </Suspense>
   );
 }

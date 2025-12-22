@@ -225,6 +225,32 @@ export async function deleteTransaction(lineUserId: string, id: string): Promise
   });
 }
 
+// ==================== Transaction Shortcuts API ====================
+
+export interface TransactionShortcut {
+  name: string;
+  amount: number;
+  categoryId: string | null;
+  categoryName: string;
+  categoryEmoji: string;
+  type: TransactionType;
+  count: number;
+  lastUsed: string;
+}
+
+export async function fetchFrequentTransactions(lineUserId: string): Promise<{
+  shortcuts: TransactionShortcut[];
+  lastTransaction: Transaction | null;
+}> {
+  return apiRequest<{ shortcuts: TransactionShortcut[]; lastTransaction: Transaction | null }>(
+    '/api/transactions/frequent',
+    {
+      method: 'GET',
+      lineUserId,
+    }
+  );
+}
+
 // ==================== Transaction Stats API ====================
 
 export interface FetchStatsParams {
