@@ -13,6 +13,7 @@ export default function AddCategoryPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('');
+  const [budget, setBudget] = useState('');
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +41,7 @@ export default function AddCategoryPage() {
         name: name.trim(),
         type,
         emoji: emoji.trim() || undefined,
+        budget: budget ? parseFloat(budget) : undefined,
       });
       
       router.push('/settings/category');
@@ -127,6 +129,35 @@ export default function AddCategoryPage() {
                 Optional: Add an emoji to represent this category
               </p>
             </div>
+
+            {/* Budget Field */}
+            {type === 'EXPENSE' && (
+              <div>
+                <label
+                  htmlFor="budget"
+                  className="block text-sm font-medium text-black dark:text-white mb-2"
+                >
+                  Monthly Budget
+                </label>
+                <div className="relative">
+                  <input
+                    id="budget"
+                    type="number"
+                    step="0.01"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full px-4 py-3 pl-12 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+                  />
+                  <span className="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400 font-medium">
+                    ฿
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Optional: Set a monthly budget goal for this category
+                </p>
+              </div>
+            )}
           </div>
         </SettingsSection>
 

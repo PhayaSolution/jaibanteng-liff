@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, emoji, type } = body;
+    const { name, emoji, type, budget } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         emoji: emoji?.trim() || null,
         type: type || 'EXPENSE',
+        budget: budget ? parseFloat(budget.toString()) : null,
       },
     });
 

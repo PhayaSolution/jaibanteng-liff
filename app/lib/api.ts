@@ -68,7 +68,7 @@ export async function fetchCategories(lineUserId: string, type?: TransactionType
 
 export async function createCategory(
   lineUserId: string,
-  payload: { name: string; type: TransactionType; emoji?: string }
+  payload: { name: string; type: TransactionType; emoji?: string; budget?: number }
 ): Promise<Category> {
   const data = await apiRequest<{ category: Category }>('/api/categories', {
     method: 'POST',
@@ -81,7 +81,7 @@ export async function createCategory(
 export async function updateCategory(
   lineUserId: string,
   id: string,
-  payload: { name?: string; type?: TransactionType; emoji?: string }
+  payload: { name?: string; type?: TransactionType; emoji?: string; budget?: number }
 ): Promise<Category> {
   const data = await apiRequest<{ category: Category }>(`/api/categories/${id}`, {
     method: 'PUT',

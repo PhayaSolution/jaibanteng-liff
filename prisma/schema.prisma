@@ -44,6 +44,7 @@ model Category {
   name      String
   type      TransactionType @default(EXPENSE)
   emoji     String?
+  budget    Decimal?        @db.Decimal(10, 2)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 

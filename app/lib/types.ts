@@ -17,6 +17,7 @@ export interface Category {
   name: string;
   type: TransactionType;
   emoji?: string | null;
+  budget?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +58,13 @@ export interface TransactionStats {
     income: number;
     expense: number;
     total: number;
+  }>;
+  categoryStats?: Array<{
+    id: string;
+    name: string;
+    emoji?: string | null;
+    budget: number | null;
+    spent: number;
   }>;
 }
 

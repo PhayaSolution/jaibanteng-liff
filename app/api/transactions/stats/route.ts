@@ -65,27 +65,71 @@ export async function GET(request: NextRequest) {
         type: true,
         amount: true,
         date: true,
+        categoryId: true,
       },
       orderBy: {
         date: 'asc',
       },
     });
 
-    // Calculate totals only for filtered transactions
+    // Get transactions for the current month to calculate budget progress
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const monthlyTransactions = await prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+        date: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+      select: {
+        type: true,
+        amount: true,
+        categoryId: true,
+      },
+    });
+
+    // Get categories to match with budgets
+    const categories = await prisma.category.findMany({
+      where: { userId: user.id },
+    });
+
+    // Calculate totals for the requested period
     const totalIncome = transactions
-      .filter((t: TransactionSelect) => t.type === 'INCOME')
-      .reduce((sum: number, t: TransactionSelect) => sum + Number(t.amount), 0);
+      .filter((t) => t.type === 'INCOME')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const totalExpense = transactions
-      .filter((t: TransactionSelect) => t.type === 'EXPENSE')
-      .reduce((sum: number, t: TransactionSelect) => sum + Number(t.amount), 0);
+      .filter((t) => t.type === 'EXPENSE')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const balance = totalIncome - totalExpense;
 
+    // Calculate category-wise stats using monthly transactions
+    const categoryStats = categories
+      .filter(cat => cat.type === 'EXPENSE')
+      .map(cat => {
+        const spent = monthlyTransactions
+          .filter(t => t.categoryId === cat.id && t.type === 'EXPENSE')
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        return {
+          id: cat.id,
+          name: cat.name,
+          emoji: cat.emoji,
+          budget: cat.budget ? Number(cat.budget) : null,
+          spent,
+        };
+      })
+      .filter(cat => cat.budget !== null || cat.spent > 0)
+      .sort((a, b) => (b.budget || 0) - (a.budget || 0) || b.spent - a.spent);
+
     // Send all transactions with ISO date strings
-    // Client will convert to local timezone and group according to selected period
-    const spendingData = transactions.map((transaction: TransactionSelect) => ({
-      date: transaction.date.toISOString(), // ISO string with full datetime for client to convert to local timezone
+    const spendingData = transactions.map((transaction) => ({
+      date: transaction.date.toISOString(),
       income: transaction.type === 'INCOME' ? Number(transaction.amount) : 0,
       expense: transaction.type === 'EXPENSE' ? Number(transaction.amount) : 0,
       total: transaction.type === 'INCOME' ? Number(transaction.amount) : -Number(transaction.amount),
@@ -98,6 +142,7 @@ export async function GET(request: NextRequest) {
         balance,
         transactionCount: transactions.length,
         spendingData,
+        categoryStats,
       },
     });
   } catch (error) {

@@ -9,6 +9,7 @@ import SafeArea from '@/app/components/layout/safe-area.component';
 import SpendingGraph from '@/app/components/dashboard/spending-graph.component';
 import TransactionList from '@/app/components/dashboard/transaction-list.component';
 import TaskList from '@/app/components/dashboard/task-list.component';
+import BudgetProgress from '@/app/components/dashboard/budget-progress.component';
 import { SearchIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
 import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction } from '@/app/lib/api';
@@ -305,6 +306,7 @@ export default function DashboardPage() {
   // Stats and chart state
   const [spendingData, setSpendingData] = useState<Array<{ month: string; value: number }>>([]);
   const [balance, setBalance] = useState<number>(0);
+  const [categoryStats, setCategoryStats] = useState<any[]>([]);
   
   // Loading and error states
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
@@ -333,6 +335,7 @@ export default function DashboardPage() {
 
       setSpendingData(transformSpendingDataForGraph(stats.spendingData, period));
       setBalance(stats.balance);
+      setCategoryStats(stats.categoryStats || []);
     } catch (err) {
       console.error('Failed to load stats:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load stats';
@@ -748,6 +751,19 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* Budget Progress */}
+            {categoryStats.length > 0 && (
+              <div className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-5">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+                  Monthly Budgets
+                </h3>
+                <BudgetProgress 
+                  categories={categoryStats} 
+                  isLoading={isLoadingStats} 
+                />
+              </div>
+            )}
 
             {/* Transaction List */}
             <div>
