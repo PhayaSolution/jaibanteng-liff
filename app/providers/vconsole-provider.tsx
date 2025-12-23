@@ -1,25 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { isLiff } from '@/app/utils/liff.util';
 import type VConsole from 'vconsole';
 
 let vConsoleInstance: VConsole | null = null;
 
 export function VConsoleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Only enable vConsole in development or LIFF environment
-    const shouldEnable = 
-      process.env.NODE_ENV === 'development' || 
-      (typeof window !== 'undefined' && isLiff());
-
-    if (!shouldEnable || typeof window === 'undefined') {
-      return;
-    }
-
-    // Check localStorage for vConsole state
-    const stored = localStorage.getItem('vconsole_enabled');
-    const enabled = stored === 'true' || (stored === null && shouldEnable);
+    // vConsole is now disabled by default and must be explicitly enabled
+    const enabled = localStorage.getItem('vconsole_enabled') === 'true';
 
     if (enabled) {
       initVConsole();

@@ -1,11 +1,11 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Receipt, Plus, User } from 'lucide-react';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
@@ -23,8 +23,8 @@ export default function BottomNavigation() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 pb-[env(safe-area-inset-bottom)] z-50">
       <div className="max-w-2xl mx-auto px-8 py-5 flex items-center justify-around">
-        <button
-          onClick={() => router.push('/dashboard')}
+        <Link
+          href="/dashboard"
           className={`p-3 transition-colors ${
             isActive('/dashboard')
               ? 'text-black dark:text-white'
@@ -32,17 +32,17 @@ export default function BottomNavigation() {
           }`}
         >
           <Receipt className="w-6 h-6" />
-        </button>
+        </Link>
 
-        <button
-          onClick={() => router.push('/transaction/add')}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors bg-black dark:bg-white text-white dark:text-black shadow-lg`}
+        <Link
+          href="/transaction/add"
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors bg-black dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 active:scale-95 transition-transform`}
         >
           <Plus className="w-6 h-6" />
-        </button>
+        </Link>
 
-        <button
-          onClick={() => router.push('/settings')}
+        <Link
+          href="/settings"
           className={`p-3 transition-colors ${
             isActive('/settings')
               ? 'text-black dark:text-white'
@@ -50,7 +50,7 @@ export default function BottomNavigation() {
           }`}
         >
           <User className="w-6 h-6" />
-        </button>
+        </Link>
       </div>
     </div>
   );

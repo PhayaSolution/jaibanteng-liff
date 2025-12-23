@@ -46,9 +46,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <LiffProvider>
-          <VConsoleProvider>
-            {children}
-          </VConsoleProvider>
+          {children}
         </LiffProvider>
       </body>
     </html>

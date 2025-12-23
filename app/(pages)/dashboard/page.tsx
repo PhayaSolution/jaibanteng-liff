@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, addDays } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import Container from '@/app/components/layout/container.component';
@@ -720,12 +721,12 @@ export default function DashboardPage() {
             </div>
 
             {/* Search Icon */}
-            <button
-              onClick={() => router.push('/dashboard/search')}
+            <Link
+              href="/dashboard/search"
               className="p-2.5 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white bg-white dark:bg-zinc-900 shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-full transition-all"
             >
               <SearchIcon className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
 
           {/* Balance - Centered */}

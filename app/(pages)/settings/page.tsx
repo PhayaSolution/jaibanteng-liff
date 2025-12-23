@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { User as UserIcon, List, Tags, LogOut, ChevronRight, PieChart } from 'lucide-react';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
@@ -87,12 +88,12 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold text-black dark:text-white">
             {isLoading ? '...' : displayName}
           </h2>
-          <button
-            onClick={() => router.push('/settings/profile/edit')}
+          <Link
+            href="/settings/profile/edit"
             className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
           >
             Edit Profile
-          </button>
+          </Link>
         </div>
       </div>
 

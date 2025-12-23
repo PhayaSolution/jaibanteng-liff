@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Plus, Search, Folder } from 'lucide-react';
 import SettingsLayout from '@/app/components/settings/settings-layout.component';
 import SettingsSection from '@/app/components/settings/settings-section.component';
@@ -56,13 +57,13 @@ export default function CategoryPage() {
   };
 
   const AddButton = (
-    <button
-      onClick={() => router.push('/settings/category/add')}
+    <Link
+      href="/settings/category/add"
       className="p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-80 transition-opacity"
       aria-label="Add Category"
     >
       <Plus className="w-5 h-5" />
-    </button>
+    </Link>
   );
 
   return (
