@@ -59,7 +59,7 @@ export default function CategoryPage() {
   const AddButton = (
     <Link
       href="/settings/category/add"
-      className="p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-80 transition-opacity"
+      className="inline-flex items-center justify-center p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-80 transition-opacity"
       aria-label="Add Category"
     >
       <Plus className="w-5 h-5" />

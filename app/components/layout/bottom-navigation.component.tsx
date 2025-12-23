@@ -8,8 +8,8 @@ export default function BottomNavigation() {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+    if (path === '/') {
+      return pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
     }
     if (path === '/transaction/add') {
       return pathname === '/transaction/add';
@@ -24,9 +24,9 @@ export default function BottomNavigation() {
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 pb-[env(safe-area-inset-bottom)] z-50">
       <div className="max-w-2xl mx-auto px-8 py-5 flex items-center justify-around">
         <Link
-          href="/dashboard"
+          href="/"
           className={`p-3 transition-colors ${
-            isActive('/dashboard')
+            isActive('/')
               ? 'text-black dark:text-white'
               : 'text-gray-400 dark:text-gray-600'
           }`}

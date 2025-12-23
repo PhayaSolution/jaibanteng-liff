@@ -59,7 +59,7 @@ export default function TagsPage() {
   const AddButton = (
     <Link
       href="/tags/add"
-      className="p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-80 transition-opacity"
+      className="inline-flex items-center justify-center p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-80 transition-opacity"
       aria-label="Add Tag"
     >
       <Plus className="w-5 h-5" />

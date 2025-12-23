@@ -37,8 +37,8 @@ export default function SettingsLayout({
       <Container className={`py-4 pb-20 ${className}`}>
         {/* Header */}
         {(title || showBackButton || actionButton) && (
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               {showBackButton && (
                 backUrl ? (
                   <Link
@@ -88,7 +88,7 @@ export default function SettingsLayout({
                 </h1>
               )}
             </div>
-            {actionButton && <div>{actionButton}</div>}
+            {actionButton && <div className="flex-shrink-0">{actionButton}</div>}
           </div>
         )}
 
