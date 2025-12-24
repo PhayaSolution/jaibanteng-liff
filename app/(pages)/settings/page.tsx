@@ -65,72 +65,79 @@ export default function SettingsPage() {
   };
 
   return (
-    <SettingsLayout title="Settings" showBackButton={false}>
+    <SettingsLayout title="ตั้งค่า" showBackButton={false} footer={<BottomNavigation />}>
       {/* Profile Section */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4 overflow-hidden border-4 border-white dark:border-black shadow-sm">
-          {isLoading ? (
-            <div className="w-full h-full animate-pulse bg-gray-300 dark:bg-gray-700" />
-          ) : pictureUrl ? (
-            <Image
-              src={pictureUrl}
-              alt={displayName}
-              width={96}
-              height={96}
-              className="w-full h-full object-cover"
-              unoptimized
-            />
-          ) : (
-            <UserIcon className="w-12 h-12 text-gray-400 dark:text-gray-600" />
-          )}
+      <div className="flex flex-col items-center mb-10 animate-fade-in-up">
+        <div className="relative group">
+          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="w-28 h-28 rounded-[2.5rem] bg-foreground/5 p-1 relative z-10 overflow-hidden border-2 border-white/20 shadow-2xl">
+            {isLoading ? (
+              <div className="w-full h-full animate-pulse bg-foreground/10 rounded-[2rem]" />
+            ) : pictureUrl ? (
+              <Image
+                src={pictureUrl}
+                alt={displayName}
+                width={112}
+                height={112}
+                className="w-full h-full object-cover rounded-[2rem]"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                <UserIcon className="w-12 h-12 text-primary" />
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-1">
-          <h2 className="text-xl font-semibold text-black dark:text-white">
-            {isLoading ? '...' : displayName}
+        <div className="flex flex-col items-center gap-2 mt-5">
+          <h2 className="text-2xl font-black text-foreground font-prompt tracking-tight">
+            {isLoading ? 'รอสักครู่...' : displayName}
           </h2>
           <Link
             href="/settings/profile/edit"
-            className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
+            className="text-xs text-primary font-bold font-prompt px-4 py-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-all active:scale-95"
           >
-            Edit Profile
+            แก้ไขโปรไฟล์
           </Link>
         </div>
       </div>
 
       {/* Main Settings */}
-      <SettingsSection title="General">
-        <SettingsListItem
-          title="Category Breakdown"
-          description="View spending statistics by category"
-          icon={<PieChart className="w-5 h-5" />}
-          href="/charts"
-        />
-        <SettingsListItem
-          title="Categories"
-          description="Manage spending categories"
-          icon={<List className="w-5 h-5" />}
-          href="/settings/category"
-        />
-        <SettingsListItem
-          title="Tags"
-          description="Manage transaction tags"
-          icon={<Tags className="w-5 h-5" />}
-          href="/tags"
-        />
-      </SettingsSection>
+      <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <SettingsSection title="ทั่วไป">
+          <SettingsListItem
+            title="สถิติการใช้จ่าย"
+            description="ดูสรุปภาพรวมรายหมวดหมู่ของคุณ"
+            icon={<PieChart className="w-5 h-5" />}
+            href="/charts"
+          />
+          <SettingsListItem
+            title="จัดการหมวดหมู่"
+            description="ปรับแต่งหมวดหมู่ให้เข้ากับไลฟ์สไตล์"
+            icon={<List className="w-5 h-5" />}
+            href="/settings/category"
+          />
+          <SettingsListItem
+            title="แท็กที่ใช้บ่อย"
+            description="จัดการแท็กเพื่อการจดที่ไวยิ่งขึ้น"
+            icon={<Tags className="w-5 h-5" />}
+            href="/tags"
+          />
+        </SettingsSection>
+      </div>
 
       {/* Account Actions */}
-      <SettingsSection title="Account">
-        <SettingsListItem
-          title={isLoggingOut ? "Logging out..." : "Logout"}
-          icon={<LogOut className="w-5 h-5" />}
-          onClick={handleLogout}
-          variant="danger"
-          rightElement={null}
-        />
-      </SettingsSection>
-
-      <BottomNavigation />
+      <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <SettingsSection title="บัญชี">
+          <SettingsListItem
+            title={isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
+            icon={<LogOut className="w-5 h-5" />}
+            onClick={handleLogout}
+            variant="danger"
+            rightElement={null}
+          />
+        </SettingsSection>
+      </div>
     </SettingsLayout>
   );
 }

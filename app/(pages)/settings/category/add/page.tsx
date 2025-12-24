@@ -157,7 +157,7 @@ export default function AddCategoryPage() {
                     className="w-full px-4 py-3 pl-12 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
                   />
                   <span className="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400 font-medium">
-                    ฿
+                    บ.
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">

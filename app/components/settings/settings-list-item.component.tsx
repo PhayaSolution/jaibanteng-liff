@@ -24,31 +24,31 @@ export default function SettingsListItem({
   className = '',
 }: SettingsListItemProps) {
   const baseClasses = `
-    w-full flex items-center justify-between p-4 rounded-lg 
-    bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 
-    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors
+    w-full flex items-center justify-between p-4 rounded-[1.5rem] 
+    glass shadow-xl shadow-black/5 hover:scale-[1.02] transition-all duration-300
     ${className}
   `;
 
   const content = (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {icon && (
           <div className={`
-            ${variant === 'danger' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}
+            p-2.5 rounded-2xl bg-foreground/5
+            ${variant === 'danger' ? 'text-destructive' : 'text-primary'}
           `}>
             {icon}
           </div>
         )}
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start min-w-0">
           <span className={`
-            text-sm font-medium
-            ${variant === 'danger' ? 'text-red-600 dark:text-red-400' : 'text-black dark:text-white'}
+            text-sm font-bold font-prompt
+            ${variant === 'danger' ? 'text-destructive' : 'text-foreground'}
           `}>
             {title}
           </span>
           {description && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-foreground/40 font-medium truncate font-prompt">
               {description}
             </span>
           )}
@@ -59,7 +59,7 @@ export default function SettingsListItem({
         rightElement
       ) : (href || onClick) ? (
         <svg
-          className="w-5 h-5 text-gray-400"
+          className={`w-5 h-5 ${variant === 'danger' ? 'text-destructive/50' : 'text-foreground/20'}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -67,7 +67,7 @@ export default function SettingsListItem({
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={3}
             d="M9 5l7 7-7 7"
           />
         </svg>

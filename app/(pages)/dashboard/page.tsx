@@ -687,95 +687,108 @@ export default function DashboardPage() {
     router.push(`/transaction/add?${params.toString()}`);
   };
 
-  return (
-    <SafeArea className="h-dvh bg-gray-50 dark:bg-black flex flex-col overflow-hidden">
-      <Container className="py-4 pb-32 sm:pb-24 flex-1 overflow-y-auto min-h-0">
-        {/* Header */}
-        <div className="mb-6 space-y-4">
-          <div className="flex items-center justify-between">
-            {/* Period Selector Button */}
-            <div className="relative inline-block">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
-                className="appearance-none px-4 py-2 pr-10 rounded-full border-0 bg-white dark:bg-zinc-900 shadow-sm text-sm font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all cursor-pointer focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none"
-              >
-                <option value="Today">Today</option>
-                <option value="This Week">This Week</option>
-                <option value="This Month">This Month</option>
-                <option value="This Year">This Year</option>
-              </select>
-              <svg
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
+  const session = getUserSession();
+  const displayName = session?.displayName || 'คุณ';
 
+  return (
+    <SafeArea className="h-dvh bg-background dark:bg-zinc-950 flex flex-col overflow-hidden">
+      <Container className="py-6 pb-36 sm:pb-32 flex-1 overflow-y-auto min-h-0 no-scrollbar">
+        {/* Header & Greeting */}
+        <div className="mb-8 space-y-6 animate-fade-in-up">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold text-foreground">
+                สวัสดีครับ {displayName}
+              </h2>
+              <p className="text-sm font-medium text-foreground/40 font-prompt">
+                วันนี้ให้ละมุนช่วยจดอะไรดีครับ?
+              </p>
+            </div>
             {/* Search Icon */}
             <Link
               href="/dashboard/search"
-              className="p-2.5 text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white bg-white dark:bg-zinc-900 shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-full transition-all"
+              className="p-3.5 text-foreground/50 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-3xl transition-all active:scale-90"
             >
               <SearchIcon className="w-5 h-5" />
             </Link>
           </div>
 
-          {/* Balance - Centered */}
-          <div className="text-center py-2">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Available Balance</span>
-            {isLoadingStats ? (
-              <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white animate-pulse">
-                ...
-              </h2>
-            ) : error ? (
-              <h2 className="mt-1 text-lg font-medium text-rose-600 dark:text-rose-500">
-                {error}
-              </h2>
-            ) : (
-              <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
-                ฿{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h2>
-            )}
+          {/* Balance Card - Premium Design */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full opacity-50 group-hover:opacity-70 transition-opacity" />
+            <div className="relative glass p-8 rounded-[2.5rem] text-center border-white/40 dark:border-white/5 shadow-2xl shadow-primary/10">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-base font-black uppercase tracking-[0.2em] text-foreground/30 font-prompt">
+                  บันทึกความละมุน
+                </span>
+                {/* Period Selector Button - Inline with label */}
+                <div className="relative inline-block">
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
+                    className="appearance-none pl-2 pr-6 py-1 rounded-full border-0 bg-primary/10 text-sm font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer focus:outline-none uppercase tracking-wider"
+                  >
+                    <option value="Today">Today</option>
+                    <option value="This Week">Week</option>
+                    <option value="This Month">Month</option>
+                    <option value="This Year">Year</option>
+                  </select>
+                  <svg
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-primary pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {isLoadingStats ? (
+                <div className="h-14 flex items-center justify-center">
+                  <div className="w-32 h-10 bg-foreground/5 animate-pulse rounded-2xl" />
+                </div>
+              ) : error ? (
+                <h2 className="text-lg font-medium text-destructive">
+                  {error}
+                </h2>
+              ) : (
+                <h2 className="text-5xl font-black text-foreground tracking-tighter">
+                  {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บ.
+                </h2>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex p-1 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800">
+        {/* Tabs - Glass Design */}
+        <div className="mb-8">
+          <div className="flex p-1.5 glass rounded-3xl shadow-xl shadow-black/5 border-white/20">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 font-prompt ${
                 activeTab === 'dashboard'
-                  ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
-                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-[1.02]'
+                  : 'text-foreground/40 hover:text-foreground/60'
               }`}
             >
-              Dashboard
+              แดชบอร์ด
             </button>
             <button
               onClick={() => setActiveTab('task')}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 font-prompt ${
                 activeTab === 'task'
-                  ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
-                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-[1.02]'
+                  : 'text-foreground/40 hover:text-foreground/60'
               }`}
             >
-              Task
+              รายการจด
             </button>
           </div>
         </div>
 
         {/* Quick Add Section */}
-        <div className="mb-6">
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <QuickAdd 
             shortcuts={shortcuts} 
             lastTransaction={lastTransaction} 
@@ -785,139 +798,159 @@ export default function DashboardPage() {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'dashboard' ? (
-          <>
-            {/* Spending Graph */}
-            <div className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-4 overflow-hidden">
-              <div className="overflow-x-auto lg:overflow-x-visible scroll-smooth pb-2">
-                <div className="w-full min-w-[600px] lg:min-w-full">
-                  {isLoadingStats ? (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 dark:text-gray-400">Loading graph...</p>
-                    </div>
-                  ) : (
-                    <SpendingGraph 
-                      data={spendingData} 
-                      currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
-                    />
-                  )}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          {activeTab === 'dashboard' ? (
+            <>
+              {/* Spending Graph Card */}
+              <div className="mb-8 glass rounded-[2.5rem] shadow-xl shadow-black/5 p-6 border-white/20">
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
+                    แนวโน้มการเงิน
+                  </h3>
+                </div>
+                <div className="overflow-x-auto lg:overflow-x-visible scroll-smooth no-scrollbar">
+                  <div className="w-full min-w-[600px] lg:min-w-full">
+                    {isLoadingStats ? (
+                      <div className="flex flex-col items-center justify-center py-20 gap-3">
+                        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        <p className="text-xs font-medium text-foreground/30 font-prompt">กําลังวาดกราฟ...</p>
+                      </div>
+                    ) : (
+                      <SpendingGraph 
+                        data={spendingData} 
+                        currentMonthIndex={spendingData.length > 0 ? spendingData.length - 1 : 0} 
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Budget Progress */}
-            {categoryStats.length > 0 && (
-              <div className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-5">
-                <button 
-                  onClick={() => setIsBudgetExpanded(!isBudgetExpanded)}
-                  className="w-full flex items-center justify-between"
-                >
-                  <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                    Monthly Budgets
+              {/* Budget Progress Card */}
+              {categoryStats.length > 0 && (
+                <div className="mb-8 glass rounded-[2.5rem] shadow-xl shadow-black/5 p-6 border-white/20">
+                  <button 
+                    onClick={() => setIsBudgetExpanded(!isBudgetExpanded)}
+                    className="w-full flex items-center justify-between group"
+                  >
+                    <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt text-left">
+                      งบประมาณรายหมวด
+                    </h3>
+                    <div className={`p-1.5 rounded-full bg-foreground/5 transition-all duration-300 ${isBudgetExpanded ? 'rotate-180 bg-primary/10 text-primary' : 'text-foreground/30'}`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </button>
+                  
+                  {isBudgetExpanded && (
+                    <div className="mt-6 animate-fade-in-up">
+                      <BudgetProgress 
+                        categories={categoryStats} 
+                        isLoading={isLoadingStats} 
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Transaction List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
+                    รายการล่าสุด
                   </h3>
-                  <div className={`transition-transform duration-200 ${isBudgetExpanded ? 'rotate-180' : ''}`}>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                </div>
+                {isLoadingList ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-3 glass rounded-[2.5rem]">
+                    <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-xs font-medium text-foreground/30 font-prompt">รอสักครู่นะครับ...</p>
                   </div>
-                </button>
-                
-                {isBudgetExpanded && (
-                  <div className="mt-4">
-                    <BudgetProgress 
-                      categories={categoryStats} 
-                      isLoading={isLoadingStats} 
+                ) : error ? (
+                  <div className="glass p-12 rounded-[2.5rem] text-center">
+                    <p className="text-sm font-medium text-destructive font-prompt">{error}</p>
+                  </div>
+                ) : transactionGroups.length > 0 ? (
+                  <>
+                    <TransactionList
+                      groups={transactionGroups}
+                      onTransactionClick={(transaction) => {
+                        console.log('Transaction clicked:', transaction);
+                      }}
+                      onDelete={handleDeleteTransaction}
                     />
+                    
+                    {/* View More Button */}
+                    {hasMore && (
+                      <div className="mt-10 mb-8 text-center">
+                        <button
+                          onClick={loadMoreTransactions}
+                          disabled={isLoadingMore}
+                          className="px-10 py-4 text-xs font-bold text-foreground/40 hover:text-primary glass rounded-full shadow-lg shadow-black/5 border-white/20 transition-all active:scale-95 disabled:opacity-50 font-prompt"
+                        >
+                          {isLoadingMore ? 'แป๊บเดียวครับ...' : 'ดูเพิ่มอีกนิด'}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="glass p-16 rounded-[2.5rem] text-center border-dashed border-2 border-foreground/5">
+                    <p className="text-sm font-medium text-foreground/30 font-prompt">ยังไม่มีรายการวันนี้เลยครับ</p>
                   </div>
                 )}
               </div>
-            )}
-
-            {/* Transaction List */}
-            <div>
-              {isLoadingList ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">Loading transactions...</p>
+            </>
+          ) : (
+            <>
+              {/* Task List Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
+                    งานที่ต้องจัดการ
+                  </h3>
                 </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <p className="text-rose-600 dark:text-rose-500">{error}</p>
-                </div>
-              ) : transactionGroups.length > 0 ? (
-                <>
-                  <TransactionList
-                    groups={transactionGroups}
-                    onTransactionClick={(transaction) => {
-                      console.log('Transaction clicked:', transaction);
-                    }}
-                    onDelete={handleDeleteTransaction}
-                  />
-                  
-                  {/* View More Button */}
-                  {hasMore && (
-                    <div className="mt-6 mb-8 text-center">
-                      <button
-                        onClick={loadMoreTransactions}
-                        disabled={isLoadingMore}
-                        className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoadingMore ? 'Loading...' : 'Load more'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">No transactions found</p>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Task List */}
-            <div>
-              {isLoadingList ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">Loading tasks...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <p className="text-red-600 dark:text-red-400">{error}</p>
-                </div>
-              ) : taskGroups.length > 0 ? (
-                <>
-                  <TaskList
-                    groups={taskGroups}
-                    onDone={handleDoneTransaction}
-                    onBack={handleBackTransaction}
-                    onDelete={handleDeleteTransaction}
-                    onDoneAllForDate={handleDoneAllForDate}
-                    onDoneAllForPeriod={handleDoneAllForPeriod}
-                    selectedPeriod={selectedPeriod}
-                  />
-                  
-                  {/* View More Button */}
-                  {hasMore && (
-                    <div className="mt-6 mb-8 text-center">
-                      <button
-                        onClick={loadMoreTransactions}
-                        disabled={isLoadingMore}
-                        className="px-6 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoadingMore ? 'Loading...' : 'Load more'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">No tasks found</p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+                {isLoadingList ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-3 glass rounded-[2.5rem]">
+                    <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-xs font-medium text-foreground/30 font-prompt">กําลังตรวจสอบงาน...</p>
+                  </div>
+                ) : error ? (
+                  <div className="glass p-12 rounded-[2.5rem] text-center">
+                    <p className="text-sm font-medium text-destructive font-prompt">{error}</p>
+                  </div>
+                ) : taskGroups.length > 0 ? (
+                  <>
+                    <TaskList
+                      groups={taskGroups}
+                      onDone={handleDoneTransaction}
+                      onBack={handleBackTransaction}
+                      onDelete={handleDeleteTransaction}
+                      onDoneAllForDate={handleDoneAllForDate}
+                      onDoneAllForPeriod={handleDoneAllForPeriod}
+                      selectedPeriod={selectedPeriod}
+                    />
+                    
+                    {/* View More Button */}
+                    {hasMore && (
+                      <div className="mt-10 mb-8 text-center">
+                        <button
+                          onClick={loadMoreTransactions}
+                          disabled={isLoadingMore}
+                          className="px-10 py-4 text-xs font-bold text-foreground/40 hover:text-primary glass rounded-full shadow-lg shadow-black/5 border-white/20 transition-all active:scale-95 disabled:opacity-50 font-prompt"
+                        >
+                          {isLoadingMore ? 'แป๊บเดียวครับ...' : 'ย้อนไปดูงานเก่า'}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="glass p-16 rounded-[2.5rem] text-center border-dashed border-2 border-foreground/5">
+                    <p className="text-sm font-medium text-foreground/30 font-prompt">ไม่มีงานค้างแล้วครับ เย่!</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </Container>
 
       <BottomNavigation />

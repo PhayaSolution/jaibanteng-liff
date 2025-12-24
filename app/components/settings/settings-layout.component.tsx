@@ -12,6 +12,7 @@ interface SettingsLayoutProps {
   backUrl?: string;
   actionButton?: React.ReactNode;
   className?: string;
+  footer?: React.ReactNode;
 }
 
 export default function SettingsLayout({
@@ -21,6 +22,7 @@ export default function SettingsLayout({
   backUrl,
   actionButton,
   className = '',
+  footer,
 }: SettingsLayoutProps) {
   const router = useRouter();
 
@@ -33,57 +35,35 @@ export default function SettingsLayout({
   };
 
   return (
-    <SafeArea className="min-h-screen min-h-dvh bg-white dark:bg-black">
-      <Container className={`py-4 pb-20 ${className}`}>
+    <SafeArea className="h-dvh bg-background dark:bg-zinc-950 flex flex-col overflow-hidden">
+      <Container className={`py-6 ${footer ? 'pb-36 sm:pb-32' : 'pb-10'} flex-1 overflow-y-auto min-h-0 no-scrollbar ${className}`}>
         {/* Header */}
         {(title || showBackButton || actionButton) && (
-          <div className="flex items-center justify-between mb-6 gap-4">
+          <div className="flex items-center justify-between mb-8 gap-4 animate-fade-in-up">
             <div className="flex items-center gap-4 min-w-0">
               {showBackButton && (
-                backUrl ? (
-                  <Link
-                    href={backUrl}
-                    className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    aria-label="Go back"
+                <button
+                  onClick={handleBack}
+                  className="p-3.5 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
+                  aria-label="Go back"
+                >
+                  <svg
+                    className="w-5 h-5 text-current"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-6 h-6 text-black dark:text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </Link>
-                ) : (
-                  <button
-                    onClick={handleBack}
-                    className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    aria-label="Go back"
-                  >
-                    <svg
-                      className="w-6 h-6 text-black dark:text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </button>
-                )
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
               )}
               {title && (
-                <h1 className="text-2xl font-bold text-black dark:text-white">
+                <h1 className="text-3xl font-black text-foreground font-prompt tracking-tight">
                   {title}
                 </h1>
               )}
@@ -92,9 +72,11 @@ export default function SettingsLayout({
           </div>
         )}
 
-        {/* Content */}
-        {children}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          {children}
+        </div>
       </Container>
+      {footer}
     </SafeArea>
   );
 }

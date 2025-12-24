@@ -179,34 +179,34 @@ function AddTransactionForm() {
   };
 
   return (
-    <SafeArea className="h-dvh max-h-dvh bg-white dark:bg-black flex flex-col overflow-hidden text-black dark:text-white">
+    <SafeArea className="h-dvh max-h-dvh bg-background dark:bg-zinc-950 flex flex-col overflow-hidden text-foreground">
       <Container className="flex flex-col h-full p-0 sm:p-0 md:p-0 relative">
         
-        {/* 1. Header Section (Fixed Top) */}
-        <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0 z-10">
+        {/* 1. Header Section - Premium glass feel */}
+        <div className="px-6 pt-4 pb-1 flex items-center justify-between shrink-0 z-10">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-current hover:bg-gray-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+            className="p-3 -ml-2 text-foreground/40 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
           >
-            <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+            <ArrowLeft className="w-5 h-5 stroke-[3px]" />
           </button>
           
-          <div className="flex bg-gray-100/80 dark:bg-zinc-900/80 p-1 rounded-full backdrop-blur-sm">
+          <div className="flex glass p-1 rounded-full shadow-xl shadow-black/5 border-white/20">
             <button
               onClick={() => {
                 setType('income');
                 setSelectedCategory(null);
               }}
               className={`
-                px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                px-5 py-1.5 rounded-full text-[10px] font-black transition-all duration-300 font-prompt uppercase tracking-wider
                 ${
                   type === 'income'
-                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-zinc-500'
+                    ? 'bg-secondary text-white shadow-lg shadow-secondary/20'
+                    : 'text-foreground/30 hover:text-foreground/50'
                 }
               `}
             >
-              Income
+              รายรับ
             </button>
             <button
               onClick={() => {
@@ -214,38 +214,38 @@ function AddTransactionForm() {
                 setSelectedCategory(null);
               }}
               className={`
-                px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                px-5 py-1.5 rounded-full text-[10px] font-black transition-all duration-300 font-prompt uppercase tracking-wider
                 ${
                   type === 'expense'
-                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-zinc-500'
+                    ? 'bg-destructive text-white shadow-lg shadow-destructive/20'
+                    : 'text-foreground/30 hover:text-foreground/50'
                 }
               `}
             >
-              Expense
+              รายจ่าย
             </button>
           </div>
           
           <div className="w-10"></div>
         </div>
 
-        {/* 2. Main Content (Centered Amount) */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 pb-8">
+        {/* 2. Main Content - Amount display */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 py-2">
           
-          <div className="mb-8">
+          <div className="mb-1">
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="h-auto py-2 px-4 rounded-full bg-gray-50 dark:bg-zinc-900 text-current font-medium text-sm border border-transparent hover:border-gray-200 dark:hover:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all shadow-sm"
+                  className="h-auto py-2 px-4 rounded-xl glass text-foreground font-bold text-xs border-white/20 hover:bg-white transition-all shadow-xl shadow-black/5"
                 >
-                  <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>
-                    {date ? format(date, 'd MMMM yyyy') : 'Select date'}
+                  <CalendarIcon className="w-3.5 h-3.5 mr-2 text-primary" />
+                  <span className="font-prompt">
+                    {date ? format(date, 'd MMMM yyyy') : 'เลือกวันที่ครับ'}
                   </span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none shadow-xl rounded-xl bg-transparent" align="center">
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-3xl bg-white dark:bg-zinc-950" align="center">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -254,39 +254,41 @@ function AddTransactionForm() {
                     setOpen(false);
                   }}
                   initialFocus
-                  className="rounded-xl border bg-white dark:bg-zinc-950"
+                  className="rounded-3xl p-4"
                 />
               </PopoverContent>
             </Popover>
           </div>
 
-          <div className="flex flex-col items-center relative w-full animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex flex-col items-center relative w-full animate-fade-in-up">
             <div className="flex items-baseline gap-1">
-              <span className="text-6xl sm:text-7xl font-bold text-current tracking-tighter leading-none">
+              <span className="text-5xl sm:text-8xl font-black text-foreground tracking-tighter leading-none animate-text-glow">
                 {amount}
               </span>
             </div>
-            <span className="text-sm text-gray-400 font-medium mt-2">THB</span>
+            <span className="text-[9px] text-foreground/20 font-black tracking-[0.3em] mt-1 font-prompt uppercase">
+              บาท / THB
+            </span>
             {initialName && (
-              <span className="mt-4 px-3 py-1 rounded-full bg-gray-100 dark:bg-zinc-900 text-xs font-medium text-gray-500">
+              <span className="mt-2 px-3 py-1 rounded-xl bg-foreground/5 text-[9px] font-bold text-foreground/40 font-prompt">
                 {initialName}
               </span>
             )}
           </div>
         </div>
 
-        {/* 3. Bottom Controls (Category + Keypad) */}
-        <div className="px-4 pb-6 pt-2 shrink-0 bg-white dark:bg-black flex flex-col gap-5 z-10 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] border-t border-gray-50/50 dark:border-zinc-900/50">
+        {/* 3. Bottom Controls - Floating glass panel */}
+        <div className="px-5 pb-5 pt-4 shrink-0 glass shadow-2xl border-t-white/30 rounded-t-[2rem] animate-fade-in-up">
           
-          <div className="w-full min-h-[44px]">
+          <div className="w-full min-h-[36px] mb-3">
              {isLoading ? (
-              <div className="flex items-center justify-center py-2">
-                <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+              <div className="flex items-center justify-center py-1">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
               </div>
             ) : error ? (
-              <div className="text-center text-red-500 text-xs py-2">{error}</div>
+              <div className="text-center text-destructive text-[10px] py-1 font-prompt font-bold">{error}</div>
             ) : (
-              <div className="flex justify-center">
+              <div className="flex justify-center -mx-5 px-5">
                 <CategoryTags
                   categories={categories.map(cat => ({ id: cat.id, name: `${cat.emoji || '📁'} ${cat.name}`, type: 'category' as const }))}
                   tags={tags.map(tag => ({ id: tag.id, name: `#${tag.name}`, type: 'tag' as const }))}
@@ -314,8 +316,8 @@ function AddTransactionForm() {
 export default function AddTransactionPage() {
   return (
     <Suspense fallback={
-      <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+      <div className="h-dvh w-full flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     }>
       <AddTransactionForm />

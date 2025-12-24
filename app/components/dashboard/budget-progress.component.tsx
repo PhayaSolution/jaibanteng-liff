@@ -43,7 +43,7 @@ export default function BudgetProgress({ categories, isLoading }: BudgetProgress
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {categories.map((category) => {
         const hasBudget = category.budget !== null && category.budget > 0;
         const percentage = hasBudget 
@@ -53,48 +53,50 @@ export default function BudgetProgress({ categories, isLoading }: BudgetProgress
         const isNearBudget = hasBudget && !isOverBudget && percentage >= 80;
 
         return (
-          <div key={category.id} className="group">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{category.emoji || '📁'}</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <div key={category.id} className="group animate-fade-in-up">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 flex items-center justify-center text-lg bg-foreground/5 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                  {category.emoji || '📁'}
+                </div>
+                <span className="text-sm font-bold text-foreground font-prompt">
                   {category.name}
                 </span>
               </div>
               <div className="text-right">
-                <div className="text-sm font-bold text-gray-900 dark:text-white">
-                  ฿{category.spent.toLocaleString()}
+                <div className="text-sm font-black text-foreground">
+                  {category.spent.toLocaleString()} บ.
                   {hasBudget && (
-                    <span className="text-gray-400 dark:text-zinc-500 font-normal ml-1">
-                      / ฿{category.budget?.toLocaleString()}
+                    <span className="text-foreground/20 font-bold ml-1">
+                      / {category.budget?.toLocaleString()} บ.
                     </span>
                   )}
                 </div>
                 {hasBudget && (
-                  <div className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${
-                    isOverBudget ? 'text-rose-500' : isNearBudget ? 'text-amber-500' : 'text-gray-400'
+                  <div className={`text-[9px] font-black uppercase tracking-widest mt-0.5 font-prompt ${
+                    isOverBudget ? 'text-destructive' : isNearBudget ? 'text-amber-500' : 'text-primary'
                   }`}>
-                    {isOverBudget ? 'Over Budget' : isNearBudget ? 'Near Limit' : `${Math.round(percentage)}% Used`}
+                    {isOverBudget ? 'เกินงบแล้วครับ' : isNearBudget ? 'ใกล้เต็มแล้วนะ' : `ใช้ไป ${Math.round(percentage)}%`}
                   </div>
                 )}
               </div>
             </div>
             
             {hasBudget ? (
-              <div className="h-2 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden shadow-inner">
+              <div className="h-2.5 w-full bg-foreground/5 rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-500 ease-out rounded-full ${
+                  className={`h-full transition-all duration-1000 ease-out rounded-full shadow-lg ${
                     isOverBudget 
-                      ? 'bg-gradient-to-r from-rose-500 to-red-600' 
+                      ? 'bg-destructive' 
                       : isNearBudget 
-                        ? 'bg-gradient-to-r from-amber-400 to-orange-500' 
-                        : 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                        ? 'bg-gradient-to-r from-amber-400 to-orange-400' 
+                        : 'bg-primary'
                   }`}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
             ) : (
-              <div className="h-1 w-full bg-gray-50 dark:bg-zinc-900/50 rounded-full border border-dashed border-gray-200 dark:border-zinc-800" />
+              <div className="h-1 w-full bg-foreground/5 rounded-full border border-dashed border-foreground/10" />
             )}
           </div>
         );

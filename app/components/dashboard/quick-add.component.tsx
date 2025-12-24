@@ -38,13 +38,13 @@ export default function QuickAdd({ shortcuts, lastTransaction, onSelect, isLoadi
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
-          Quick Shortcuts
+      <div className="flex items-center justify-between px-2">
+        <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
+          ทางลัดความไว
         </h3>
       </div>
       
-      <div className="flex items-center gap-3 overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar">
+      <div className="flex items-center gap-4 overflow-x-auto pb-8 -mx-4 px-4 no-scrollbar">
         {/* Repeat Last Item - Always first */}
         {lastTransaction && (
           <button
@@ -54,29 +54,32 @@ export default function QuickAdd({ shortcuts, lastTransaction, onSelect, isLoadi
               categoryId: lastTransaction.categoryId ?? null,
               type: lastTransaction.type as 'INCOME' | 'EXPENSE'
             })}
-            className="shrink-0 group relative flex flex-col items-start justify-between w-[150px] h-[100px] p-4 rounded-[32px] bg-black dark:bg-white text-white dark:text-black shadow-xl shadow-gray-200/50 dark:shadow-none transition-all active:scale-95 overflow-hidden"
+            className="shrink-0 group relative flex flex-col items-start justify-between w-[150px] h-[120px] p-5 rounded-[2.5rem] bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95 overflow-hidden"
           >
             <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-1.5">
-                <div className="p-1.5 rounded-full bg-white/20 dark:bg-black/5">
-                  <History className="w-3 h-3" />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-white/20">
+                  <History className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-[9px] font-black tracking-widest uppercase opacity-60">Repeat</span>
+                <span className="text-[10px] font-black tracking-widest uppercase opacity-70 font-prompt">ล่าสุด</span>
               </div>
             </div>
             
-            <div className="w-full text-left">
-              <p className="text-[14px] font-bold truncate leading-none mb-1">
+            <div className="w-full text-left relative z-10 space-y-0.5">
+              <p className="text-[11px] font-bold truncate opacity-60 font-prompt">
                 {lastTransaction.name}
               </p>
-              <p className="text-[18px] font-black tracking-tighter">
-                ฿{parseFloat(lastTransaction.amount).toLocaleString()}
-              </p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-[22px] font-black tracking-tighter leading-none">
+                  {parseFloat(lastTransaction.amount).toLocaleString()}
+                </p>
+                <span className="text-[10px] font-bold opacity-60 font-prompt">บ.</span>
+              </div>
             </div>
 
-            {/* Subtle background icon */}
-            <div className="absolute -right-2 -bottom-2 opacity-10 rotate-12">
-               <span className="text-5xl">{lastTransaction.category?.emoji || '💰'}</span>
+            {/* Subtle background emoji */}
+            <div className="absolute -right-3 -bottom-3 opacity-20 rotate-12 transition-transform group-hover:scale-125 duration-500 pointer-events-none">
+               <span className="text-6xl">{lastTransaction.category?.emoji || '💰'}</span>
             </div>
           </button>
         )}
@@ -91,22 +94,34 @@ export default function QuickAdd({ shortcuts, lastTransaction, onSelect, isLoadi
               categoryId: shortcut.categoryId,
               type: shortcut.type
             })}
-            className="shrink-0 flex flex-col items-start justify-between w-[150px] h-[100px] p-4 rounded-[32px] bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm transition-all active:scale-95"
+            className="shrink-0 group relative flex flex-col items-start justify-between w-[150px] h-[120px] p-5 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-white dark:border-white/5 shadow-xl shadow-black/5 transition-all active:scale-95 overflow-hidden"
           >
             <div className="flex items-center justify-between w-full">
-              <span className="text-2xl">{shortcut.categoryEmoji}</span>
-              <span className="text-[9px] font-bold text-gray-300 dark:text-zinc-600 uppercase tracking-widest">
-                {shortcut.count}x
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-foreground/5 transition-colors group-hover:bg-primary/10">
+                  <FastForward className="w-3.5 h-3.5 text-foreground/30 group-hover:text-primary transition-colors" />
+                </div>
+                <span className="text-[10px] font-black text-foreground/20 uppercase tracking-tighter">
+                  x{shortcut.count}
+                </span>
+              </div>
             </div>
 
-            <div className="w-full text-left">
-              <p className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 truncate leading-none mb-1">
+            <div className="w-full text-left relative z-10 space-y-0.5">
+              <p className="text-[11px] font-bold text-foreground/40 truncate font-prompt">
                 {shortcut.name}
               </p>
-              <p className="text-[18px] font-black text-gray-900 dark:text-white tracking-tighter">
-                ฿{shortcut.amount.toLocaleString()}
-              </p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-[22px] font-black text-foreground tracking-tighter leading-none">
+                  {shortcut.amount.toLocaleString()}
+                </p>
+                <span className="text-[10px] font-bold text-foreground/40 font-prompt">บ.</span>
+              </div>
+            </div>
+
+            {/* Subtle background emoji */}
+            <div className="absolute -right-3 -bottom-3 opacity-[0.03] dark:opacity-[0.05] rotate-12 transition-transform group-hover:scale-125 duration-500 pointer-events-none">
+               <span className="text-6xl grayscale group-hover:grayscale-0 transition-all">{shortcut.categoryEmoji || '💰'}</span>
             </div>
           </button>
         ))}

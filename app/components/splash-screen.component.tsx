@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DebugPanel from '@/app/components/debug/debug-panel.component';
+import { LamoonLogo } from '@/app/components/lamoon-logo';
 
 interface SplashScreenProps {
   isLoading: boolean;
@@ -25,58 +26,75 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-white dark:bg-zinc-950 relative overflow-hidden">
-      {/* Subtle gradient orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-indigo-50 via-transparent to-transparent dark:from-indigo-950/30 dark:via-transparent opacity-60 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-blue-50 to-transparent dark:from-blue-950/20 opacity-50 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-violet-50 to-transparent dark:from-violet-950/20 opacity-50 blur-3xl pointer-events-none" />
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background relative overflow-hidden">
+      {/* Premium background particles and gradients */}
+      <div className="absolute inset-0 premium-gradient opacity-60 dark:opacity-40 animate-gradient-xy pointer-events-none" />
+      
+      {/* Floating particles */}
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full bg-primary/20 animate-particle-float pointer-events-none"
+          style={{
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 5}s`,
+            animationDuration: `${6 + Math.random() * 4}s`
+          }}
+        />
+      ))}
 
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center px-6">
-        {/* Brand name */}
-        <h1 
+      {/* Main content card with glassmorphism */}
+      <div className="relative z-10 flex flex-col items-center px-8 py-12 glass rounded-[2.5rem] shadow-2xl mx-6 animate-fade-in-up">
+        {/* Logo Container */}
+        <div 
           onClick={handleLogoTap}
-          className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2 cursor-pointer select-none"
+          className="relative mb-8 cursor-pointer transform transition-transform active:scale-95"
         >
-          Jai Banteng
-        </h1>
+          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse-soft" />
+          <div className="relative logo-glow">
+            <LamoonLogo size={140} />
+          </div>
+        </div>
 
-        {/* Tagline */}
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium mb-12">
-          Simple expense tracking
+        {/* Brand name with Mali font for friendly feel */}
+        <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight animate-text-glow">
+          ละมุน
+        </h1>
+        <p className="text-lg font-medium text-foreground/60 mb-12 font-prompt">
+          Lamoon
         </p>
 
         {/* Loading / Error state */}
-        <div className="w-full max-w-[200px]">
+        <div className="w-full max-w-[220px]">
           {isLoading ? (
-            <div className="flex flex-col items-center gap-4">
-              {/* Modern spinner */}
-              <div className="relative w-8 h-8">
-                <div className="absolute inset-0 rounded-full border-2 border-zinc-200 dark:border-zinc-800" />
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-zinc-900 dark:border-t-white animate-spin" />
+            <div className="flex flex-col items-center gap-6">
+              {/* Premium Loading Bar */}
+              <div className="w-full h-2.5 bg-foreground/10 rounded-full overflow-hidden relative">
+                <div className="absolute inset-0 loading-bar-gradient animate-loading-progress rounded-full" />
+                <div className="absolute inset-0 bg-white/30 animate-shimmer" />
               </div>
-              <p className="text-sm text-zinc-400 dark:text-zinc-500">
-                Loading...
+              <p className="text-sm font-medium text-foreground/40 animate-pulse font-prompt tracking-wide">
+                กําลังเตรียมความละมุน...
               </p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center gap-4">
-              {/* Error state */}
-              <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex flex-col items-center gap-6">
+              {/* Friendly Error state */}
+              <div className="w-14 h-14 rounded-3xl bg-destructive/10 flex items-center justify-center animate-bounce">
+                <svg className="w-7 h-7 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 text-center">
+              <p className="text-sm font-prompt text-foreground/70 text-center leading-relaxed">
                 {error.includes('Failed to initialize LIFF') || error.includes('LIFF is not ready')
-                  ? 'Please open in LINE app'
-                  : 'Connection failed'}
+                  ? 'ดูเหมือนจะไม่ได้เปิดจาก LINE นะครับ'
+                  : 'การเชื่อมต่อขัดข้องนิดหน่อยครับ'}
               </p>
               <button 
                 onClick={onRetry}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-zinc-900 dark:bg-white dark:text-zinc-900 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors active:scale-[0.98]"
+                className="w-full py-3.5 text-sm font-bold text-white bg-primary rounded-2xl hover:brightness-105 transition-all active:scale-[0.97] shadow-lg shadow-primary/25 font-prompt"
               >
-                Try again
+                ลองอีกครั้งนะ
               </button>
             </div>
           ) : null}
@@ -84,9 +102,9 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-8 left-0 right-0 text-center">
-        <p className="text-xs text-zinc-400 dark:text-zinc-600">
-          © 2024 Jai Banteng
+      <div className="absolute bottom-10 left-0 right-0 text-center">
+        <p className="text-xs font-prompt text-foreground/30 font-medium tracking-widest uppercase">
+          Financial Serenity • 2024
         </p>
       </div>
 

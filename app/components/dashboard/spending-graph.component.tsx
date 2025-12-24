@@ -39,7 +39,7 @@ const CustomDot = (props: ChartDotProps) => {
           cy={cy}
           r={8}
           fill="currentColor"
-          className="text-black dark:text-white"
+          className="text-primary"
           opacity={0.2}
         />
         <circle
@@ -47,7 +47,7 @@ const CustomDot = (props: ChartDotProps) => {
           cy={cy}
           r={6}
           fill="currentColor"
-          className="text-black dark:text-white"
+          className="text-primary"
         />
       </g>
     );
@@ -65,7 +65,7 @@ const CustomActiveDot = (props: ActiveDotProps) => {
         cy={cy}
         r={8}
         fill="currentColor"
-        className="text-black dark:text-white"
+        className="text-primary"
         opacity={0.2}
       />
       <circle
@@ -73,7 +73,7 @@ const CustomActiveDot = (props: ActiveDotProps) => {
         cy={cy}
         r={6}
         fill="currentColor"
-        className="text-black dark:text-white"
+        className="text-primary"
       />
     </g>
   );
@@ -133,15 +133,15 @@ export default function SpendingGraph({ data, currentMonthIndex }: SpendingGraph
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="currentColor"
-            opacity={0.1}
-            className="text-black dark:text-white"
+            opacity={0.05}
+            className="text-foreground"
           />
           <XAxis
             dataKey="month"
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'currentColor', fontSize: isMobile ? 9 : 12, fontWeight: 500 }}
-            className="text-black dark:text-white"
+            className="text-foreground/40"
             // Show every 2nd label on mobile, all labels on desktop
             interval={isMobile ? 1 : 0}
             angle={isMobile ? -45 : 0}
@@ -157,12 +157,12 @@ export default function SpendingGraph({ data, currentMonthIndex }: SpendingGraph
               if (active && payload && payload.length) {
                 const value = Number(payload[0].value);
                 return (
-                  <div className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800">
-                    <p className="text-sm font-semibold">
-                      {value < 0 ? '-' : ''}฿{Math.abs(value).toLocaleString('en-US', { 
+                  <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-primary/20">
+                    <p className="text-sm font-bold text-foreground">
+                      {value < 0 ? '-' : ''}{Math.abs(value).toLocaleString('en-US', { 
                         minimumFractionDigits: 2, 
                         maximumFractionDigits: 2 
-                      })}
+                      })} บ.
                     </p>
                   </div>
                 );
@@ -175,12 +175,12 @@ export default function SpendingGraph({ data, currentMonthIndex }: SpendingGraph
             type="monotone"
             dataKey="value"
             stroke="url(#lineGradient)"
-            strokeWidth={3}
+            strokeWidth={4}
             fill="url(#colorGradient)"
-          dot={(props) => {
-            const { key, ...restProps } = props as ChartDotProps & {
-              key?: string | number;
-            };
+            dot={(props) => {
+              const { key, ...restProps } = props as ChartDotProps & {
+                key?: string | number;
+              };
               return (
                 <CustomDot
                   key={key}
@@ -190,8 +190,8 @@ export default function SpendingGraph({ data, currentMonthIndex }: SpendingGraph
               );
             }}
             activeDot={<CustomActiveDot />}
-            className="text-black dark:text-white"
-            animationDuration={1000}
+            className="text-primary"
+            animationDuration={1500}
             animationEasing="ease-out"
           />
         </AreaChart>

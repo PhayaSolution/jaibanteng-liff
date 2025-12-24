@@ -743,7 +743,7 @@ export default function DashboardView() {
               </h2>
             ) : (
               <h2 className="mt-1 text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
-                ฿{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บ.
               </h2>
             )}
           </div>

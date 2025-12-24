@@ -29,9 +29,9 @@ export default function NumericKeypad({
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="bg-gray-50 p-1.5 rounded-2xl">
-        <div className="grid grid-cols-3 gap-1.5">
+    <div className="flex flex-col gap-4">
+      <div className="bg-foreground/5 p-2 rounded-[2rem]">
+        <div className="grid grid-cols-3 gap-2">
           {numbers.map((row, rowIndex) =>
             row.map((value, colIndex) => {
               const isDelete = value === 'delete';
@@ -42,21 +42,21 @@ export default function NumericKeypad({
                   onClick={() => handleClick(value)}
                   className={`
                     relative
-                    h-12 sm:h-14
-                    rounded-xl
-                    text-xl font-semibold
-                    transition-all duration-200
+                    h-12 sm:h-16
+                    rounded-2xl
+                    text-xl sm:text-2xl font-black
+                    transition-all duration-300
                     active:scale-95
                     flex items-center justify-center
                     ${
                       isDelete
-                        ? 'bg-gray-200/50 text-black hover:bg-gray-200'
-                        : 'bg-white text-black shadow-sm border border-gray-100 hover:bg-gray-50'
+                        ? 'text-destructive hover:bg-destructive/10'
+                        : 'text-foreground hover:bg-foreground/10'
                     }
                   `}
                 >
                   {isDelete ? (
-                    <Delete className="w-5 h-5" />
+                    <Delete className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3px]" />
                   ) : (
                     value
                   )}
@@ -67,13 +67,13 @@ export default function NumericKeypad({
         </div>
       </div>
 
-      {/* Confirm Button - Full Width Bottom */}
+      {/* Confirm Button */}
       <button
         onClick={onConfirm}
-        className="w-full py-3 rounded-xl bg-black text-white font-semibold text-base shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+        className="w-full py-3.5 sm:py-4 rounded-[1.5rem] bg-primary text-white font-bold text-lg shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-3 font-prompt"
       >
-        <span>Save Transaction</span>
-        <Check className="w-4 h-4" />
+        <span>บันทึกเลย</span>
+        <Check className="w-5 h-5 stroke-[3.5px]" />
       </button>
     </div>
   );

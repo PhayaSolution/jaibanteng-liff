@@ -2,29 +2,38 @@
 @import "react-day-picker/style.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
+  --background: #FDFBF7;
+  --foreground: #4A4A4A;
 
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
+  --card-foreground: 0 0% 29%; /* #4A4A4A in HSL approx */
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 0 0% 0%;
+  --popover-foreground: 0 0% 29%;
+  
+  /* Lamoon Blue/Teal: #81D8D0 -> hsl(174, 50%, 68%) */
+  --primary: 174 50% 68%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 95%;
-  --secondary-foreground: 0 0% 0%;
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 50%;
-  --accent: 0 0% 95%;
-  --accent-foreground: 0 0% 0%;
-  --destructive: 0 84.2% 60.2%;
+  
+  /* Soft Mint: #B4F8C8 -> hsl(137, 79%, 84%) */
+  --secondary: 137 79% 84%;
+  --secondary-foreground: 0 0% 29%;
+  
+  --muted: 38 67% 98%; /* #FDFBF7 approx */
+  --muted-foreground: 0 0% 61%; /* #9B9B9B */
+  
+  --accent: 174 50% 90%;
+  --accent-foreground: 174 50% 30%;
+  
+  /* Warm Coral: #FFA07A -> hsl(17, 100%, 74%) */
+  --destructive: 17 100% 74%;
   --destructive-foreground: 0 0% 100%;
+  
   --border: 0 0% 90%;
   --input: 0 0% 90%;
-  --ring: 0 0% 0%;
-  --radius: 0.5rem;
+  --ring: 174 50% 68%;
+  --radius: 1.25rem;
   
-  /* Safe area insets สำหรับ iOS และ LINE LIFF */
+  /* Safe area insets */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
@@ -52,32 +61,35 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --radius: var(--radius);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Thonburi", "Leelawadee UI", sans-serif;
+  
+  --font-prompt: var(--font-prompt), sans-serif;
+  
+  --font-sans: var(--font-prompt), -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Thonburi", "Leelawadee UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #000000;
-    --foreground: #ffffff;
+    --background: #1A1A1A;
+    --foreground: #FDFBF7;
 
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 97%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 97%;
+    --primary: 174 50% 68%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 137 79% 84%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 20%;
     --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 100%;
+    --accent: 174 50% 30%;
+    --accent-foreground: 0 0% 97%;
+    --destructive: 17 100% 74%;
+    --destructive-foreground: 0 0% 10%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 174 50% 68%;
   }
 }
 
@@ -652,21 +664,21 @@ button[aria-label*="Next"] svg path {
   }
   
   .premium-gradient {
-    background: linear-gradient(-45deg, #fef3c7, #fce7f3, #ddd6fe, #cffafe, #fef3c7);
+    background: linear-gradient(-45deg, #FDFBF7, #81D8D0, #B4F8C8, #FDFBF7);
   }
   
   .dark .premium-gradient {
-    background: linear-gradient(-45deg, #1e1b4b, #312e81, #1e3a5f, #164e63, #1e1b4b);
+    background: linear-gradient(-45deg, #1A1A1A, #3A5F5A, #2D4A44, #1A1A1A);
   }
   
   .splash-gradient {
     background: linear-gradient(
       135deg,
-      #667eea 0%,
-      #764ba2 25%,
-      #f953c6 50%,
-      #b91c1c 75%,
-      #667eea 100%
+      #81D8D0 0%,
+      #A0E7E5 25%,
+      #B4F8C8 50%,
+      #FFA07A 75%,
+      #81D8D0 100%
     );
     background-size: 400% 400%;
   }
@@ -674,11 +686,11 @@ button[aria-label*="Next"] svg path {
   .dark .splash-gradient {
     background: linear-gradient(
       135deg,
-      #1e3a8a 0%,
-      #581c87 25%,
-      #831843 50%,
-      #7c2d12 75%,
-      #1e3a8a 100%
+      #1e3a38 0%,
+      #1e4a48 25%,
+      #1e5a4a 50%,
+      #5a3a2e 75%,
+      #1e3a38 100%
     );
     background-size: 400% 400%;
   }
@@ -686,10 +698,10 @@ button[aria-label*="Next"] svg path {
   .loading-bar-gradient {
     background: linear-gradient(
       90deg,
-      #667eea,
-      #764ba2,
-      #f953c6,
-      #667eea
+      #81D8D0,
+      #B4F8C8,
+      #FFA07A,
+      #81D8D0
     );
     background-size: 200% 100%;
     animation: gradient-xy 2s linear infinite;
@@ -698,10 +710,10 @@ button[aria-label*="Next"] svg path {
   .dark .loading-bar-gradient {
     background: linear-gradient(
       90deg,
-      #818cf8,
-      #a78bfa,
-      #f472b6,
-      #818cf8
+      #4da69e,
+      #6dbf9b,
+      #bf7e6d,
+      #4da69e
     );
     background-size: 200% 100%;
   }
@@ -721,12 +733,12 @@ button[aria-label*="Next"] svg path {
   }
   
   .logo-glow {
-    filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.4))
-            drop-shadow(0 0 40px rgba(118, 75, 162, 0.3));
+    filter: drop-shadow(0 0 20px rgba(129, 216, 208, 0.4))
+            drop-shadow(0 0 40px rgba(180, 248, 200, 0.3));
   }
   
   .dark .logo-glow {
-    filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.5))
-            drop-shadow(0 0 40px rgba(167, 139, 250, 0.4));
+    filter: drop-shadow(0 0 20px rgba(129, 216, 208, 0.5))
+            drop-shadow(0 0 40px rgba(180, 248, 200, 0.4));
   }
 }

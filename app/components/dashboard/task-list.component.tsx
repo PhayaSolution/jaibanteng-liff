@@ -111,40 +111,40 @@ export default function TaskList({
           <button
             onClick={handleDoneAllForPeriod}
             disabled={loadingPeriod}
-            className="px-4 py-2 text-xs font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg shadow-sm shadow-emerald-200 dark:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-3 text-xs font-bold text-white bg-primary hover:brightness-105 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 font-prompt"
           >
             {loadingPeriod && (
-              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             )}
-            Done All {selectedPeriod}
+            จัดการให้หมดเลย ({selectedPeriod})
           </button>
         </div>
       )}
 
       {groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+        <div key={groupIndex} className="glass rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden border-white/20 animate-fade-in-up" style={{ animationDelay: `${groupIndex * 0.1}s` }}>
           {/* Date header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-6 py-4 bg-foreground/5 border-b border-foreground/5">
+            <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
               {group.date}
             </h3>
             <div className="flex items-center gap-4">
-              <span className={`text-xs font-semibold ${
+              <span className={`text-sm font-black ${
                 group.total >= 0 
-                  ? 'text-emerald-600 dark:text-emerald-500' 
-                  : 'text-rose-600 dark:text-rose-500'
+                  ? 'text-secondary' 
+                  : 'text-destructive'
               }`}>
-                {group.total >= 0 ? '+' : ''}฿{Math.abs(group.total).toLocaleString()}
+                {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString()} บ.
               </span>
               {/* Done all for this date button */}
               {onDoneAllForDate && (
                 <button
                   onClick={() => handleDoneAllForDate(group.date)}
                   disabled={loadingDates.has(group.date)}
-                  className="px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  className="px-4 py-2 text-[10px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-all disabled:opacity-50 flex items-center gap-1.5 font-prompt"
                 >
                   {loadingDates.has(group.date) && (
                     <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -152,28 +152,21 @@ export default function TaskList({
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   )}
-                  Mark as Done
+                  เสร็จแล้วจ้า
                 </button>
               )}
             </div>
           </div>
 
           {/* Transactions with action buttons */}
-          <div>
+          <div className="divide-y divide-foreground/5">
             {[...group.transactions]
               .sort((a, b) => {
-                // แยก transactions ที่มี done status ไปไว้ล่างสุด
                 const aIsDone = a.status === 'done';
                 const bIsDone = b.status === 'done';
-                
-                if (aIsDone && !bIsDone) return 1; // a ไปล่าง
-                if (!aIsDone && bIsDone) return -1; // b ไปล่าง
-                
-                // ถ้าทั้งคู่เป็น done หรือไม่ใช่ done ให้ sort ตาม text
-                const aText = `${a.category} ${a.name}`.toLowerCase();
-                const bText = `${b.category} ${b.name}`.toLowerCase();
-                
-                return aText.localeCompare(bText);
+                if (aIsDone && !bIsDone) return 1;
+                if (!aIsDone && bIsDone) return -1;
+                return 0;
               })
               .map((transaction, index, array) => {
               const categoryEmoji = transaction.categoryEmoji || '📁';
@@ -181,118 +174,77 @@ export default function TaskList({
                 ? transaction.tags.join(', ')
                 : transaction.name;
               
-              // Format time from date field (or createdAt if date has no time)
+              // Format time
               let timeDisplay = '';
               if (transaction.date) {
                 try {
                   const dateObj = new Date(transaction.date);
-                  const timeFromDate = format(dateObj, 'HH:mm', { locale: enUS });
-                  
-                  // If date has no time (00:00), use createdAt instead
-                  if (timeFromDate === '00:00' && transaction.createdAt) {
-                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                  } else {
-                    timeDisplay = timeFromDate;
-                  }
-                } catch (e) {
-                  console.error('Error formatting date time:', e, transaction.date);
-                  // Fallback to createdAt if date parsing fails
-                  if (transaction.createdAt) {
-                    try {
-                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                    } catch (e2) {
-                      console.error('Error formatting createdAt:', e2);
-                    }
-                  }
-                }
-              } else if (transaction.createdAt) {
-                // Fallback to createdAt if no date
-                try {
-                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                } catch (e) {
-                  console.error('Error formatting createdAt:', e);
-                }
+                  timeDisplay = format(dateObj, 'HH:mm', { locale: enUS });
+                } catch (e) {}
               }
               
               const amountColor = transaction.type === 'income' 
-                ? 'text-emerald-600 dark:text-emerald-500' 
-                : 'text-rose-600 dark:text-rose-500';
+                ? 'text-secondary' 
+                : 'text-destructive';
               
-              // Show Done button if status is 'active' (not done)
               const showDone = transaction.status === 'active' || !transaction.status;
-              // Show Active button if status is 'done' (can change back to active)
               const showBack = transaction.status === 'done';
-              // Show strikethrough if status is 'done'
               const isDone = transaction.status === 'done';
               const isLast = index === array.length - 1;
 
               return (
                 <div
                   key={transaction.id}
-                  className={`group relative flex items-center gap-4 py-3 px-4 transition-colors duration-200 ${
+                  className={`group relative flex items-center gap-4 py-4 px-6 transition-all duration-300 ${
                     isDone 
-                      ? 'bg-gray-50/50 dark:bg-zinc-900/50 opacity-60' 
-                      : 'hover:bg-gray-50 dark:hover:bg-zinc-800/50'
-                  } ${!isLast ? 'border-b border-gray-100 dark:border-zinc-800' : ''}`}
+                      ? 'bg-foreground/5 opacity-40 grayscale' 
+                      : 'hover:bg-foreground/5'
+                  }`}
                 >
                   {/* Emoji Icon */}
-                  <div className={`shrink-0 w-10 h-10 flex items-center justify-center text-xl rounded-full ${
-                    isDone ? 'bg-gray-100 dark:bg-zinc-800 grayscale' : 'bg-gray-100 dark:bg-zinc-800'
-                  }`}>
+                  <div className="shrink-0 w-12 h-12 flex items-center justify-center text-2xl bg-foreground/5 rounded-2xl">
                     {categoryEmoji}
                   </div>
                   
                   {/* Category and Tags */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 mb-0.5">
-                      <p className={`text-sm font-medium ${
-                        isDone 
-                          ? 'text-gray-400 dark:text-gray-600 line-through' 
-                          : 'text-gray-900 dark:text-gray-100'
+                      <p className={`text-sm font-bold font-prompt ${
+                        isDone ? 'line-through' : 'text-foreground'
                       }`}>
                         {transaction.category}
                       </p>
                       {timeDisplay && (
-                        <span className={`text-xs ${
-                          isDone 
-                            ? 'text-gray-400 dark:text-gray-600' 
-                            : 'text-gray-400 dark:text-gray-500'
-                        }`}>
+                        <span className="text-[10px] text-foreground/30 font-bold">
                           {timeDisplay}
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs truncate ${
-                      isDone 
-                        ? 'text-gray-300 dark:text-gray-700 line-through' 
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
+                    <p className="text-xs text-foreground/40 font-medium truncate font-prompt">
                       {tagsDisplay}
                     </p>
                   </div>
                   
                   {/* Amount and Action buttons */}
-                  <div className="shrink-0 flex items-center gap-3">
-                    <span className={`text-sm font-semibold ${
-                      isDone 
-                        ? 'text-gray-400 dark:text-gray-600 line-through' 
-                        : amountColor
+                  <div className="shrink-0 flex items-center gap-4">
+                    <span className={`text-sm font-black ${
+                      isDone ? 'line-through text-foreground/20' : amountColor
                     }`}>
-                      {transaction.type === 'income' ? '+' : ''}฿{transaction.amount.toLocaleString()}
+                      {transaction.type === 'income' ? '+' : ''}{transaction.amount.toLocaleString()} บ.
                     </span>
                     {showDone && (
                       <button
                         onClick={() => handleDone(transaction)}
                         disabled={loadingIds.has(transaction.id)}
-                        className="px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 min-w-[60px] justify-center"
+                        className="px-5 py-2.5 text-xs font-bold text-white bg-primary rounded-2xl hover:brightness-105 shadow-lg shadow-primary/20 transition-all active:scale-[0.95] disabled:opacity-50 min-w-[75px] font-prompt"
                       >
                         {loadingIds.has(transaction.id) ? (
-                          <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-3.5 w-3.5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                         ) : (
-                          'Done'
+                          'เสร็จแล้ว'
                         )}
                       </button>
                     )}
@@ -300,15 +252,15 @@ export default function TaskList({
                       <button
                         onClick={() => handleBack(transaction)}
                         disabled={loadingIds.has(transaction.id)}
-                        className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 min-w-[60px] justify-center"
+                        className="px-5 py-2.5 text-xs font-bold text-foreground/40 bg-foreground/5 border border-foreground/5 rounded-2xl hover:bg-foreground/10 transition-all active:scale-[0.95] disabled:opacity-50 min-w-[75px] font-prompt"
                       >
                         {loadingIds.has(transaction.id) ? (
-                          <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-3.5 w-3.5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                         ) : (
-                          'Undo'
+                          'แก้แป๊บ'
                         )}
                       </button>
                     )}

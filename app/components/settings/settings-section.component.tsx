@@ -12,22 +12,22 @@ export default function SettingsSection({
   className = '',
 }: SettingsSectionProps) {
   return (
-    <div className={`mb-6 ${className}`}>
+    <div className={`mb-8 ${className}`}>
       {(title || description) && (
-        <div className="mb-2 px-1">
+        <div className="mb-3 px-2">
           {title && (
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <h3 className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em] font-prompt">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            <p className="text-xs text-foreground/40 font-medium mt-0.5 font-prompt">
               {description}
             </p>
           )}
         </div>
       )}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {children}
       </div>
     </div>

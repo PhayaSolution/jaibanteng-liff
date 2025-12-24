@@ -52,107 +52,83 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
   return (
     <div className="space-y-6">
       {groups.map((group, groupIndex) => (
-        <div key={groupIndex} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+        <div key={groupIndex} className="glass rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden border-white/20 animate-fade-in-up" style={{ animationDelay: `${groupIndex * 0.1}s` }}>
           {/* Date header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-6 py-4 bg-foreground/5 border-b border-foreground/5">
+            <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
               {group.date}
             </h3>
-            <span className={`text-xs font-semibold ${
+            <span className={`text-sm font-black ${
               group.total >= 0 
-                ? 'text-emerald-600 dark:text-emerald-500' 
-                : 'text-rose-600 dark:text-rose-500'
+                ? 'text-secondary' 
+                : 'text-destructive'
             }`}>
-              {group.total >= 0 ? '+' : ''}฿{Math.abs(group.total).toLocaleString()}
+              {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString()} บ.
             </span>
           </div>
 
           {/* Transactions */}
-          <div>
+          <div className="divide-y divide-foreground/5">
             {group.transactions.map((transaction, index) => {
               const categoryEmoji = transaction.categoryEmoji || '📁';
               const tagsDisplay = transaction.tags && transaction.tags.length > 0
                 ? transaction.tags.join(', ')
                 : transaction.name;
               
-              // Format time from date field (or createdAt if date has no time)
+              // Format time
               let timeDisplay = '';
               if (transaction.date) {
                 try {
                   const dateObj = new Date(transaction.date);
-                  const timeFromDate = format(dateObj, 'HH:mm', { locale: enUS });
-                  
-                  // If date has no time (00:00), use createdAt instead
-                  if (timeFromDate === '00:00' && transaction.createdAt) {
+                  timeDisplay = format(dateObj, 'HH:mm', { locale: enUS });
+                  if (timeDisplay === '00:00' && transaction.createdAt) {
                     timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                  } else {
-                    timeDisplay = timeFromDate;
                   }
                 } catch (e) {
-                  console.error('Error formatting date time:', e, transaction.date);
-                  // Fallback to createdAt if date parsing fails
                   if (transaction.createdAt) {
-                    try {
-                      timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                    } catch (e2) {
-                      console.error('Error formatting createdAt:', e2);
-                    }
+                    timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
                   }
-                }
-              } else if (transaction.createdAt) {
-                // Fallback to createdAt if no date
-                try {
-                  timeDisplay = format(new Date(transaction.createdAt), 'HH:mm', { locale: enUS });
-                } catch (e) {
-                  console.error('Error formatting createdAt:', e);
                 }
               }
               
               const amountColor = transaction.type === 'income' 
-                ? 'text-emerald-600 dark:text-emerald-500' 
-                : 'text-rose-600 dark:text-rose-500';
+                ? 'text-secondary' 
+                : 'text-destructive';
               
               const isLast = index === group.transactions.length - 1;
 
               return (
                 <div
                   key={transaction.id}
-                  className={`group relative flex items-center gap-4 py-3 px-4 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors duration-200 ${
-                    !isLast ? 'border-b border-gray-100 dark:border-zinc-800' : ''
-                  }`}
+                  className="group relative flex items-center gap-4 py-4 px-6 hover:bg-foreground/5 transition-all duration-300 cursor-pointer active:scale-[0.98]"
+                  onClick={() => onTransactionClick?.(transaction)}
                 >
                   {/* Emoji Icon */}
-                  <div className="shrink-0 w-10 h-10 flex items-center justify-center text-xl bg-gray-100 dark:bg-zinc-800 rounded-full">
+                  <div className="shrink-0 w-12 h-12 flex items-center justify-center text-2xl bg-foreground/5 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     {categoryEmoji}
                   </div>
                   
                   {/* Category and Tags */}
-                  <div 
-                    className="flex-1 min-w-0 cursor-pointer"
-                    onClick={() => onTransactionClick?.(transaction)}
-                  >
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 mb-0.5">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <p className="text-sm font-bold text-foreground font-prompt">
                         {transaction.category}
                       </p>
                       {timeDisplay && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">
+                        <span className="text-[10px] text-foreground/30 font-bold uppercase">
                           {timeDisplay}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal truncate">
+                    <p className="text-xs text-foreground/40 font-medium truncate font-prompt">
                       {tagsDisplay}
                     </p>
                   </div>
                   
                   {/* Amount and Delete button */}
-                  <div className="shrink-0 flex items-center gap-3">
-                    <span 
-                      className={`text-sm font-semibold cursor-pointer ${amountColor}`}
-                      onClick={() => onTransactionClick?.(transaction)}
-                    >
-                      {transaction.type === 'income' ? '+' : '-'}฿{transaction.amount.toLocaleString()}
+                  <div className="shrink-0 flex items-center gap-4">
+                    <span className={`text-sm font-black ${amountColor}`}>
+                      {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString()} บ.
                     </span>
                     <button
                       onClick={(e) => {
@@ -160,7 +136,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                         handleDelete(transaction);
                       }}
                       disabled={loadingIds.has(transaction.id)}
-                      className="p-2 text-gray-400 hover:text-rose-500 dark:text-gray-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2.5 text-foreground/10 hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all disabled:opacity-50"
                       aria-label="Delete"
                     >
                       {loadingIds.has(transaction.id) ? (
