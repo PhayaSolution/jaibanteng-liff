@@ -128,9 +128,21 @@ export default function SearchPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="p-3 bg-gray-50 dark:bg-zinc-900 rounded-2xl text-black dark:text-white shadow-sm active:scale-90 transition-transform"
+            className="p-3.5 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <svg
+              className="w-5 h-5 text-current"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </button>
           
           <div className="flex-1 relative group">
@@ -281,7 +293,7 @@ export default function SearchPage() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-3 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all shadow-sm"
+                      className="w-full px-3 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all shadow-sm"
                     />
                   </div>
                   <span className="text-gray-300 font-bold">-</span>
@@ -290,7 +302,7 @@ export default function SearchPage() {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-3 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all shadow-sm"
+                      className="w-full px-3 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all shadow-sm"
                     />
                   </div>
                 </div>

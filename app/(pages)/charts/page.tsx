@@ -54,9 +54,21 @@ export default function ChartsPage() {
         <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0 z-10">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-black hover:bg-gray-100 rounded-full transition-colors"
+            className="p-3.5 -ml-2 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
           >
-            <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+            <svg
+              className="w-5 h-5 text-current"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </button>
           
           <h1 className="text-lg font-bold tracking-tight">Category Breakdown</h1>

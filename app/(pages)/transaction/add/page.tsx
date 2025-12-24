@@ -186,19 +186,31 @@ function AddTransactionForm() {
         <div className="px-6 pt-4 pb-1 flex items-center justify-between shrink-0 z-10">
           <button
             onClick={() => router.back()}
-            className="p-3 -ml-2 text-foreground/40 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
+            className="p-3.5 -ml-2 hover:text-primary bg-white dark:bg-zinc-900 shadow-xl shadow-black/5 rounded-2xl transition-all active:scale-90"
           >
-            <ArrowLeft className="w-5 h-5 stroke-[3px]" />
+            <svg
+              className="w-5 h-5 text-current"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </button>
           
-          <div className="flex glass p-1 rounded-full shadow-xl shadow-black/5 border-white/20">
+          <div className="flex glass p-1.5 rounded-full shadow-xl shadow-black/5 border-white/20">
             <button
               onClick={() => {
                 setType('income');
                 setSelectedCategory(null);
               }}
               className={`
-                px-5 py-1.5 rounded-full text-[10px] font-black transition-all duration-300 font-prompt uppercase tracking-wider
+                px-6 py-2 rounded-full text-xs font-black transition-all duration-300 font-prompt uppercase tracking-wider
                 ${
                   type === 'income'
                     ? 'bg-secondary text-white shadow-lg shadow-secondary/20'
@@ -214,7 +226,7 @@ function AddTransactionForm() {
                 setSelectedCategory(null);
               }}
               className={`
-                px-5 py-1.5 rounded-full text-[10px] font-black transition-all duration-300 font-prompt uppercase tracking-wider
+                px-6 py-2 rounded-full text-xs font-black transition-all duration-300 font-prompt uppercase tracking-wider
                 ${
                   type === 'expense'
                     ? 'bg-destructive text-white shadow-lg shadow-destructive/20'
@@ -232,20 +244,20 @@ function AddTransactionForm() {
         {/* 2. Main Content - Amount display */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 py-2">
           
-          <div className="mb-1">
+          <div className="mb-2">
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="h-auto py-2 px-4 rounded-xl glass text-foreground font-bold text-xs border-white/20 hover:bg-white transition-all shadow-xl shadow-black/5"
+                  className="h-auto py-3 px-6 rounded-2xl glass text-foreground font-bold text-sm border-white/20 hover:bg-white transition-all shadow-xl shadow-black/5"
                 >
-                  <CalendarIcon className="w-3.5 h-3.5 mr-2 text-primary" />
+                  <CalendarIcon className="w-4.5 h-4.5 mr-2 text-primary" />
                   <span className="font-prompt">
                     {date ? format(date, 'd MMMM yyyy') : 'เลือกวันที่ครับ'}
                   </span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-3xl bg-white dark:bg-zinc-950" align="center">
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-[2rem] bg-white dark:bg-zinc-950" align="center">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -254,7 +266,7 @@ function AddTransactionForm() {
                     setOpen(false);
                   }}
                   initialFocus
-                  className="rounded-3xl p-4"
+                  className="rounded-[2rem] p-6 [--cell-size:2.8rem]"
                 />
               </PopoverContent>
             </Popover>
