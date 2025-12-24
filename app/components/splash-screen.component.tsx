@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import DebugPanel from '@/app/components/debug/debug-panel.component';
-import { LamoonLogo } from '@/app/components/lamoon-logo';
+
 
 interface SplashScreenProps {
   isLoading: boolean;
@@ -45,19 +45,13 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
 
       {/* Main content card with glassmorphism */}
       <div className="relative z-10 flex flex-col items-center px-8 py-12 glass rounded-[2.5rem] shadow-2xl mx-6 animate-fade-in-up">
-        {/* Logo Container */}
-        <div 
-          onClick={handleLogoTap}
-          className="relative mb-8 cursor-pointer transform transition-transform active:scale-95"
-        >
-          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse-soft" />
-          <div className="relative logo-glow">
-            <LamoonLogo size={140} />
-          </div>
-        </div>
+
 
         {/* Brand name with Mali font for friendly feel */}
-        <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight animate-text-glow">
+        <h1 
+          onClick={handleLogoTap}
+          className="text-4xl font-bold text-foreground mb-3 tracking-tight animate-text-glow cursor-pointer active:scale-95 transition-transform"
+        >
           ละมุน
         </h1>
         <p className="text-lg font-medium text-foreground/60 mb-12 font-prompt">

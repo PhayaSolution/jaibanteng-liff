@@ -17,17 +17,7 @@ export const LamoonLogo: React.FC<LamoonLogoProps> = ({ className, size = 120 })
         xmlns="http://www.w3.org/2000/svg"
         className="animate-logo-float"
       >
-        {/* The Cloud/Bubble */}
-        <path
-          d="M30 40C20 40 15 50 15 60C15 75 25 85 45 85H65C80 85 85 75 85 65C85 55 80 45 70 45C70 30 60 20 45 20C35 20 30 30 30 40Z"
-          fill="#81D8D0"
-          className="opacity-80"
-        />
-        <path
-          d="M35 45C28 45 25 50 25 58C25 68 32 75 45 75H65C75 75 80 68 80 60C80 52 75 48 68 48C68 38 62 30 50 30C42 30 38 38 35 45Z"
-          fill="white"
-          className="opacity-40"
-        />
+
         
         {/* Soft Flow coin */}
         <circle cx="50" cy="55" r="12" fill="white" className="drop-shadow-sm" />
