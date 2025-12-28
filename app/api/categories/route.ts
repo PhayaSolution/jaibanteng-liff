@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { getLineUserIdFromHeaders, getUserByLineUserId } from '@/app/lib/auth';
+import { TransactionType } from '@/app/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +14,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+
     const user = await getUserByLineUserId(lineUserId);
 
     if (!user) {
@@ -21,14 +25,10 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
-
     const categories = await prisma.category.findMany({
       where: { 
         userId: user.id,
-        ...(type ? { type: type as any } : {}),
+        ...(type ? { type: type as TransactionType } : {}),
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -54,15 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await getUserByLineUserId(lineUserId);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     const body = await request.json();
     const { name, emoji, type, budget } = body;
 
@@ -73,6 +64,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const user = await getUserByLineUserId(lineUserId);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     const category = await prisma.category.create({
       data: {
         userId: user.id,

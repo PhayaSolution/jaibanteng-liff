@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { getLineUserIdFromHeaders, getUserByLineUserId } from '@/app/lib/auth';
+import { TransactionType } from '@/app/lib/types';
 
 export async function PUT(
   request: NextRequest,
@@ -24,7 +25,6 @@ export async function PUT(
         { status: 404 }
       );
     }
-
     const { id } = await params;
     const body = await request.json();
     const { name, emoji, type, budget } = body;
@@ -59,7 +59,7 @@ export async function PUT(
       data: {
         ...(name !== undefined && { name: name.trim() }),
         ...(emoji !== undefined && { emoji: emoji?.trim() || null }),
-        ...(type !== undefined && { type: type as any }),
+        ...(type !== undefined && { type: type as TransactionType }),
         ...(budget !== undefined && { budget: budget ? parseFloat(budget.toString()) : null }),
       },
     });
@@ -88,6 +88,7 @@ export async function DELETE(
       );
     }
 
+    const { id } = await params;
     const user = await getUserByLineUserId(lineUserId);
 
     if (!user) {
@@ -96,8 +97,6 @@ export async function DELETE(
         { status: 404 }
       );
     }
-
-    const { id } = await params;
 
     // Check if category exists and belongs to user
     const existingCategory = await prisma.category.findFirst({

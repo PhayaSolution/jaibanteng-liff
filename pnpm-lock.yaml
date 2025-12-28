@@ -12,7 +12,7 @@ importers:
         specifier: ^2.27.2
         version: 2.27.2
       '@prisma/client':
-        specifier: ^5.20.0
+        specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
       '@radix-ui/react-popover':
         specifier: ^1.1.15
