@@ -22,3 +22,4 @@ ALTER TABLE "categories" DROP COLUMN "userId";
 -- Step 7: Create new index for user_id
 CREATE INDEX "categories_user_id_idx" ON "categories"("user_id");
 
+

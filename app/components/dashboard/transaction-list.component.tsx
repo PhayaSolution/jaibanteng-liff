@@ -71,9 +71,6 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
           <div className="divide-y divide-foreground/5">
             {group.transactions.map((transaction, index) => {
               const categoryEmoji = transaction.categoryEmoji || '📁';
-              const tagsDisplay = transaction.tags && transaction.tags.length > 0
-                ? transaction.tags.join(', ')
-                : transaction.name;
               
               // Format time
               let timeDisplay = '';
@@ -96,11 +93,12 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                 : 'text-destructive';
               
               const isLast = index === group.transactions.length - 1;
+              const hasTags = transaction.tags && transaction.tags.length > 0;
 
               return (
                 <div
                   key={transaction.id}
-                  className="group relative flex items-center gap-4 py-4 px-6 hover:bg-foreground/5 transition-all duration-300 cursor-pointer active:scale-[0.98]"
+                  className="group relative flex items-start gap-4 py-4 px-6 hover:bg-foreground/5 transition-all duration-300 cursor-pointer active:scale-[0.98]"
                   onClick={() => onTransactionClick?.(transaction)}
                 >
                   {/* Emoji Icon */}
@@ -108,7 +106,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                     {categoryEmoji}
                   </div>
                   
-                  {/* Category and Tags */}
+                  {/* Category, Name, and Tags */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 mb-0.5">
                       <p className="text-sm font-bold text-foreground font-prompt">
@@ -120,9 +118,22 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-foreground/40 font-medium truncate font-prompt">
-                      {tagsDisplay}
+                    <p className="text-xs text-foreground/40 font-medium truncate font-prompt mb-1.5">
+                      {transaction.name}
                     </p>
+                    {/* Tags at the bottom */}
+                    {hasTags && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {transaction.tags.map((tag, tagIndex) => (
+                          <span
+                            key={tagIndex}
+                            className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-foreground/5 text-foreground/50 rounded-lg border border-foreground/10 font-prompt"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Amount and Delete button */}
