@@ -124,7 +124,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                     {/* Tags at the bottom */}
                     {hasTags && (
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {transaction.tags.map((tag, tagIndex) => (
+                        {transaction.tags?.map((tag, tagIndex) => (
                           <span
                             key={tagIndex}
                             className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-foreground/5 text-foreground/50 rounded-lg border border-foreground/10 font-prompt"
