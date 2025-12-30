@@ -118,9 +118,6 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-foreground/40 font-medium truncate font-prompt mb-1.5">
-                      {transaction.name}
-                    </p>
                     {/* Tags at the bottom */}
                     {hasTags && (
                       <div className="flex flex-wrap gap-1.5 mt-1">
