@@ -105,3 +105,16 @@ model TransactionTag {
   @@index([tagId])
 }
 
+model ParseMessage {
+  id        String          @id @default(uuid())
+  keyword   String          @unique
+  type      TransactionType
+  category  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("parse_messages")
+  @@index([keyword])
+  @@index([type])
+  @@index([category])
+}
