@@ -63,7 +63,7 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value: number) => [`${value.toLocaleString()} THB`, 'Total']}
+              formatter={(value: number) => [`${value.toLocaleString('en-US')} THB`, 'Total']}
               contentStyle={{ 
                 borderRadius: '16px', 
                 border: 'none', 

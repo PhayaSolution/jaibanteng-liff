@@ -36,8 +36,11 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => {
+          // Use explicit locale to ensure deterministic formatting across SSR/CSR
+          const formatter = new Intl.DateTimeFormat('th-TH', { month: 'short' });
+          return formatter.format(date);
+        },
         ...formatters,
       }}
       classNames={{
@@ -193,7 +196,7 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      data-day={day.date.toISOString().slice(0, 10)}
       data-today={modifiers.today ? "true" : undefined}
       data-selected-single={
         modifiers.selected &&

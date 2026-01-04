@@ -11,6 +11,7 @@ export default function SplashPage() {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, error, login, isInitialized } = useAuth();
   const [tapCount, setTapCount] = useState(0);
+  const [debugEnabled, setDebugEnabled] = useState(false);
 
   useEffect(() => {
     // Auto-login when component mounts if not already authenticated
@@ -30,6 +31,13 @@ export default function SplashPage() {
       return () => clearTimeout(timer);
     }
   }, [isInitialized, isAuthenticated, isLoading, user, router]);
+
+  useEffect(() => {
+    // Check localStorage for debug panel after mount (client-side only)
+    if (typeof window !== 'undefined') {
+      setDebugEnabled(localStorage.getItem('vconsole_enabled') === 'true');
+    }
+  }, []);
 
   const handleLogoTap = () => {
     const newCount = tapCount + 1;
@@ -105,7 +113,7 @@ export default function SplashPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-black/[0.02] dark:bg-white/[0.02] rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '2s' }}></div>
 
       {/* Debug Panel - Only if enabled in localStorage */}
-      {typeof window !== 'undefined' && localStorage.getItem('vconsole_enabled') === 'true' && (
+      {debugEnabled && (
         <div className="fixed bottom-4 right-4 z-50">
            <DebugPanel />
         </div>

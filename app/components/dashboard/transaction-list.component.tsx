@@ -63,7 +63,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                 ? 'text-secondary' 
                 : 'text-destructive'
             }`}>
-              {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString()} บ.
+              {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString('en-US')} บ.
             </span>
           </div>
 
@@ -136,7 +136,7 @@ export default function TransactionList({ groups, onTransactionClick, onDelete }
                   {/* Amount and Delete button */}
                   <div className="shrink-0 flex items-center gap-4">
                     <span className={`text-sm font-black ${amountColor}`}>
-                      {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString()} บ.
+                      {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString('en-US')} บ.
                     </span>
                     <button
                       onClick={(e) => {

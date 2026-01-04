@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import DebugPanel from '@/app/components/debug/debug-panel.component';
 
 
@@ -12,6 +12,14 @@ interface SplashScreenProps {
 
 export default function SplashScreen({ isLoading, error, onRetry }: SplashScreenProps) {
   const [tapCount, setTapCount] = useState(0);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage for debug panel after mount (client-side only)
+    if (typeof window !== 'undefined') {
+      setDebugEnabled(localStorage.getItem('vconsole_enabled') === 'true');
+    }
+  }, []);
 
   const handleLogoTap = () => {
     const newCount = tapCount + 1;
@@ -20,10 +28,28 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
       const currentlyEnabled = localStorage.getItem('vconsole_enabled') === 'true';
       const newState = !currentlyEnabled;
       localStorage.setItem('vconsole_enabled', newState.toString());
+      setDebugEnabled(newState);
       alert(`vConsole ${newState ? 'Enabled' : 'Disabled'}! Please reload the app.`);
       setTapCount(0);
     }
   };
+
+  // Deterministic particle positions using seeded PRNG
+  // This ensures SSR and client render the same initial values
+  const particleStyles = useMemo(() => {
+    // Simple seeded PRNG for deterministic randomness
+    let seed = 12345;
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    return Array.from({ length: 6 }, (_, i) => ({
+      left: `${seededRandom() * 100}%`,
+      animationDelay: `${seededRandom() * 5}s`,
+      animationDuration: `${6 + seededRandom() * 4}s`,
+    }));
+  }, []);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background relative overflow-hidden">
@@ -31,15 +57,11 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
       <div className="absolute inset-0 premium-gradient opacity-60 dark:opacity-40 animate-gradient-xy pointer-events-none" />
       
       {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
+      {particleStyles.map((style, i) => (
         <div
           key={i}
           className="absolute w-2 h-2 rounded-full bg-primary/20 animate-particle-float pointer-events-none"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${6 + Math.random() * 4}s`
-          }}
+          style={style}
         />
       ))}
 
@@ -103,7 +125,7 @@ export default function SplashScreen({ isLoading, error, onRetry }: SplashScreen
       </div>
 
       {/* Debug Panel - Only if enabled in localStorage */}
-      {typeof window !== 'undefined' && localStorage.getItem('vconsole_enabled') === 'true' && (
+      {debugEnabled && (
         <div className="fixed bottom-4 right-4 z-50">
           <DebugPanel />
         </div>

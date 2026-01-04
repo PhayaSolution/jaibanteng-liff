@@ -71,7 +71,7 @@ export default function QuickAdd({ shortcuts, lastTransaction, onSelect, isLoadi
               </p>
               <div className="flex items-baseline gap-1">
                 <p className="text-[22px] font-black tracking-tighter leading-none">
-                  {parseFloat(lastTransaction.amount).toLocaleString()}
+                  {parseFloat(lastTransaction.amount).toLocaleString('en-US')}
                 </p>
                 <span className="text-[10px] font-bold opacity-60 font-prompt">บ.</span>
               </div>
@@ -113,7 +113,7 @@ export default function QuickAdd({ shortcuts, lastTransaction, onSelect, isLoadi
               </p>
               <div className="flex items-baseline gap-1">
                 <p className="text-[22px] font-black text-foreground tracking-tighter leading-none">
-                  {shortcut.amount.toLocaleString()}
+                  {shortcut.amount.toLocaleString('en-US')}
                 </p>
                 <span className="text-[10px] font-bold text-foreground/40 font-prompt">บ.</span>
               </div>

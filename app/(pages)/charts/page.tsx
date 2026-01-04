@@ -141,7 +141,7 @@ export default function ChartsPage() {
               <div className="mb-8 flex items-baseline justify-between px-2">
                 <span className="text-sm font-bold text-gray-400">Total</span>
                 <span className={`text-2xl font-black ${type === 'EXPENSE' ? 'text-black' : 'text-emerald-600'}`}>
-                  {data?.total?.toLocaleString()} THB
+                  {data?.total?.toLocaleString('en-US')} THB
                 </span>
               </div>
 
@@ -169,7 +169,7 @@ export default function ChartsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-black text-sm">{cat.amount.toLocaleString()} THB</div>
+                        <div className="font-black text-sm">{cat.amount.toLocaleString('en-US')} THB</div>
                       </div>
                     </div>
                   ))

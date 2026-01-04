@@ -137,7 +137,7 @@ export default function TaskList({
                   ? 'text-secondary' 
                   : 'text-destructive'
               }`}>
-                {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString()} บ.
+                {group.total >= 0 ? '+' : ''}{Math.abs(group.total).toLocaleString('en-US')} บ.
               </span>
               {/* Done all for this date button */}
               {onDoneAllForDate && (
@@ -230,7 +230,7 @@ export default function TaskList({
                     <span className={`text-sm font-black ${
                       isDone ? 'line-through text-foreground/20' : amountColor
                     }`}>
-                      {transaction.type === 'income' ? '+' : ''}{transaction.amount.toLocaleString()} บ.
+                      {transaction.type === 'income' ? '+' : ''}{transaction.amount.toLocaleString('en-US')} บ.
                     </span>
                     {showDone && (
                       <button

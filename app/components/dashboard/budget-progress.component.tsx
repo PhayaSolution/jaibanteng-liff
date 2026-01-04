@@ -65,10 +65,10 @@ export default function BudgetProgress({ categories, isLoading }: BudgetProgress
               </div>
               <div className="text-right">
                 <div className="text-sm font-black text-foreground">
-                  {category.spent.toLocaleString()} บ.
+                  {category.spent.toLocaleString('en-US')} บ.
                   {hasBudget && (
                     <span className="text-foreground/20 font-bold ml-1">
-                      / {category.budget?.toLocaleString()} บ.
+                      / {category.budget?.toLocaleString('en-US')} บ.
                     </span>
                   )}
                 </div>

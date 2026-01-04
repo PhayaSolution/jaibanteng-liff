@@ -750,8 +750,14 @@ export default function DashboardPage() {
     }
   };
 
-  const session = getUserSession();
-  const displayName = session?.displayName || 'คุณ';
+  // Session state to avoid hydration mismatch
+  const [displayName, setDisplayName] = useState<string>('คุณ');
+  
+  useEffect(() => {
+    // Read session after mount to avoid hydration mismatch
+    const session = getUserSession();
+    setDisplayName(session?.displayName || 'คุณ');
+  }, []);
 
   return (
     <SafeArea className="h-dvh bg-background dark:bg-zinc-950 flex flex-col overflow-hidden">
