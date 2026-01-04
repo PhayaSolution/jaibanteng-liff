@@ -5,9 +5,9 @@ import { sendLinePushMessage, formatReminderNotification } from '@/app/lib/line'
 /**
  * Reminder Cron Job
  * 
- * This endpoint should be called every hour by an external scheduler (or Vercel Cron).
+ * This endpoint should be called every 15 minutes by an external scheduler (or Vercel Cron).
  * It will:
- * 1. Find all ACTIVE reminders due within the next 2 hours
+ * 1. Find all ACTIVE reminders due within the next 30 minutes
  * 2. Filter out reminders that have already been sent for their current remindAt time
  * 3. Group reminders by user
  * 4. Send aggregated LINE messages to users with reminderEnabled = true
@@ -41,12 +41,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const now = new Date();
-    const twoHoursLater = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const thirtyMinutesLater = new Date(now.getTime() + 30 * 60 * 1000);
 
     console.log(`[Reminder Cron] Running at ${now.toISOString()}`);
-    console.log(`[Reminder Cron] Looking for reminders between ${now.toISOString()} and ${twoHoursLater.toISOString()}`);
+    console.log(`[Reminder Cron] Looking for reminders between ${now.toISOString()} and ${thirtyMinutesLater.toISOString()}`);
 
-    // Find all ACTIVE reminders due within the next 2 hours
+    // Find all ACTIVE reminders due within the next 30 minutes
     // Join with user to check reminderEnabled
     // Exclude reminders that have already been sent for this remindAt time
     const reminders = await prisma.reminder.findMany({
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         status: 'ACTIVE',
         remindAt: {
           gt: now,
-          lte: twoHoursLater,
+          lte: thirtyMinutesLater,
         },
         user: {
           reminderEnabled: true,

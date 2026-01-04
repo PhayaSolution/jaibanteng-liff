@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
+import { DateTimePicker } from '@/app/components/ui/date-time-picker';
 import { createReminder } from '@/app/lib/api';
 import { getUserSession } from '@/app/utils/storage.util';
 
@@ -12,13 +12,13 @@ export default function AddReminderPage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
-  const [remindAt, setRemindAt] = useState(() => {
+  const [remindAt, setRemindAt] = useState<Date | undefined>(() => {
     // Default to current date/time + 1 hour, rounded to nearest hour
     const now = new Date();
     now.setHours(now.getHours() + 1);
     now.setMinutes(0);
     now.setSeconds(0);
-    return format(now, "yyyy-MM-dd'T'HH:mm");
+    return now;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function AddReminderPage() {
       await createReminder(session.lineUserId, {
         title: title.trim(),
         note: note.trim() || null,
-        remindAt: new Date(remindAt).toISOString(),
+        remindAt: remindAt.toISOString(),
       });
 
       router.back();
@@ -130,13 +130,11 @@ export default function AddReminderPage() {
             <label htmlFor="remindAt" className="block text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt mb-4">
               วันเวลาที่ต้องการแจ้งเตือน
             </label>
-            <input
-              id="remindAt"
-              type="datetime-local"
+            <DateTimePicker
               value={remindAt}
-              onChange={(e) => setRemindAt(e.target.value)}
+              onChange={setRemindAt}
+              placeholder="เลือกวันเวลา"
               className="w-full px-4 py-3 bg-foreground/5 border-2 border-foreground/10 focus:border-primary focus:ring-0 rounded-2xl text-base font-bold text-foreground font-prompt transition-colors"
-              required
             />
             <p className="mt-3 text-xs text-foreground/40 font-prompt">
               💡 ระบบจะแจ้งเตือนผ่าน LINE ล่วงหน้า 2 ชั่วโมงก่อนถึงเวลาที่กำหนด
