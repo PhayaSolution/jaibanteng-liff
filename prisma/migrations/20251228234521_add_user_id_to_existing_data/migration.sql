@@ -80,3 +80,5 @@ CREATE INDEX IF NOT EXISTS "transactions_userId_type_idx" ON "transactions"("use
 CREATE INDEX IF NOT EXISTS "transactions_userId_status_idx" ON "transactions"("userId", "status");
 
 
+
+

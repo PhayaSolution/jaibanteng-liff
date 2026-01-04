@@ -131,3 +131,5 @@ FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASC
 -- Step 4: Create index
 CREATE INDEX "tags_userId_idx" ON "tags"("userId");
 
+
+

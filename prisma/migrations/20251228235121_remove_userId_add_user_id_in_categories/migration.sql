@@ -23,3 +23,5 @@ ALTER TABLE "categories" DROP COLUMN "userId";
 CREATE INDEX "categories_user_id_idx" ON "categories"("user_id");
 
 
+
+

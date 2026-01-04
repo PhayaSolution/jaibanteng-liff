@@ -1,5 +1,5 @@
 // Server-side and client-side API helpers
-import { User, Category, Tag, Transaction, TransactionStats, ApiError, TransactionType, TransactionStatus } from './types';
+import { User, Category, Tag, Transaction, TransactionStats, ApiError, TransactionType, TransactionStatus, Reminder, ReminderStatus, ReminderSettings } from './types';
 
 /**
  * Get the base URL for API calls
@@ -277,5 +277,96 @@ export async function fetchTransactionStats(
   });
 
   return data.stats;
+}
+
+// ==================== Reminder API ====================
+
+export interface FetchRemindersParams {
+  status?: ReminderStatus;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function fetchReminders(
+  lineUserId: string,
+  params?: FetchRemindersParams
+): Promise<Reminder[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.append('status', params.status);
+  if (params?.startDate) searchParams.append('startDate', params.startDate);
+  if (params?.endDate) searchParams.append('endDate', params.endDate);
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  if (params?.offset) searchParams.append('offset', params.offset.toString());
+
+  const queryString = searchParams.toString();
+  const path = `/api/reminders${queryString ? `?${queryString}` : ''}`;
+
+  const data = await apiRequest<{ reminders: Reminder[] }>(path, {
+    method: 'GET',
+    lineUserId,
+  });
+  return data.reminders;
+}
+
+export interface CreateReminderPayload {
+  title: string;
+  note?: string | null;
+  remindAt: string;
+}
+
+export async function createReminder(
+  lineUserId: string,
+  payload: CreateReminderPayload
+): Promise<Reminder> {
+  const data = await apiRequest<{ reminder: Reminder }>('/api/reminders', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    lineUserId,
+  });
+  return data.reminder;
+}
+
+export async function updateReminder(
+  lineUserId: string,
+  id: string,
+  payload: Partial<CreateReminderPayload & { status: ReminderStatus }>
+): Promise<Reminder> {
+  const data = await apiRequest<{ reminder: Reminder }>(`/api/reminders/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    lineUserId,
+  });
+  return data.reminder;
+}
+
+export async function deleteReminder(lineUserId: string, id: string): Promise<void> {
+  await apiRequest<{ success: boolean }>(`/api/reminders/${id}`, {
+    method: 'DELETE',
+    lineUserId,
+  });
+}
+
+// ==================== Reminder Settings API ====================
+
+export async function getReminderSettings(lineUserId: string): Promise<ReminderSettings> {
+  const data = await apiRequest<{ settings: ReminderSettings }>('/api/reminders/settings', {
+    method: 'GET',
+    lineUserId,
+  });
+  return data.settings;
+}
+
+export async function updateReminderSettings(
+  lineUserId: string,
+  payload: ReminderSettings
+): Promise<ReminderSettings> {
+  const data = await apiRequest<{ settings: ReminderSettings }>('/api/reminders/settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    lineUserId,
+  });
+  return data.settings;
 }
 

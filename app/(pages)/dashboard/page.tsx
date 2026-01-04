@@ -9,34 +9,28 @@ import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
 import SpendingGraph from '@/app/components/dashboard/spending-graph.component';
 import TransactionList from '@/app/components/dashboard/transaction-list.component';
-import TaskList from '@/app/components/dashboard/task-list.component';
+import ReminderList from '@/app/components/dashboard/reminder-list.component';
 import BudgetProgress from '@/app/components/dashboard/budget-progress.component';
-import { SearchIcon } from '@/app/components/icons';
+import { SearchIcon, PlusIcon } from '@/app/components/icons';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
-import { Transaction } from '@/app/lib/types';
+import { Transaction, Reminder } from '@/app/lib/types';
 import { getUserSession } from '@/app/utils/storage.util';
 import QuickAdd from '@/app/components/dashboard/quick-add.component';
-import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction, fetchFrequentTransactions, createTransaction, TransactionShortcut } from '@/app/lib/api';
+import { fetchTransactions, fetchTransactionStats, deleteTransaction, updateTransaction, fetchFrequentTransactions, createTransaction, TransactionShortcut, fetchReminders, updateReminder, deleteReminder } from '@/app/lib/api';
 
 import { transformTransactionsToGroups, TransactionGroup } from '@/app/lib/utils';
 
 type TabType = 'dashboard' | 'task';
 type PeriodType = 'Today' | 'This Week' | 'This Month' | 'This Year';
 
-interface TaskGroup {
+interface ReminderGroup {
   date: string;
-  total: number;
-  transactions: Array<{
+  reminders: Array<{
     id: string;
-    category: string;
-    categoryEmoji?: string | null;
-    name: string;
-    amount: number;
-    type: 'income' | 'expense';
-    tags?: string[];
-    createdAt?: string;
-    date?: string;
-    status?: 'done' | 'active';
+    title: string;
+    note?: string | null;
+    remindAt: string;
+    status: 'ACTIVE' | 'DONE';
   }>;
 }
 
@@ -120,48 +114,35 @@ function getPageDateRange(
   };
 }
 
-// Transform transactions to task groups (show all transactions, filter by selected period)
-function transformTransactionsToTaskGroups(transactions: Transaction[]): TaskGroup[] {
-  // Show all transactions in the selected period (not just BACK status)
-  const groupsMap = new Map<string, TaskGroup>();
+// Transform reminders to groups by date
+function transformRemindersToGroups(reminders: Reminder[]): ReminderGroup[] {
+  const groupsMap = new Map<string, ReminderGroup>();
 
-  transactions.forEach((tx) => {
-    const date = format(new Date(tx.date), 'dd/MM/yyyy', { locale: enUS });
+  reminders.forEach((reminder) => {
+    const date = format(new Date(reminder.remindAt), 'dd/MM/yyyy', { locale: enUS });
     
     if (!groupsMap.has(date)) {
       groupsMap.set(date, {
         date,
-        total: 0,
-        transactions: [],
+        reminders: [],
       });
     }
 
     const group = groupsMap.get(date)!;
-    const amount = parseFloat(tx.amount);
-    const isIncome = tx.type === 'INCOME';
     
-    group.total += isIncome ? amount : -amount;
-    
-    group.transactions.push({
-      id: tx.id,
-      category: tx.category?.name || 'Uncategorized',
-      categoryEmoji: tx.category?.emoji || null,
-      name: tx.name,
-      amount,
-      type: isIncome ? 'income' : 'expense',
-      tags: tx.tags && tx.tags.length > 0 
-        ? tx.tags.map(tag => `#${tag.name}`)
-        : undefined,
-      createdAt: tx.createdAt,
-      date: tx.date,
-      status: tx.status === 'DONE' ? 'done' : 'active', // Only 2 states: 'done' or 'active'
+    group.reminders.push({
+      id: reminder.id,
+      title: reminder.title,
+      note: reminder.note,
+      remindAt: reminder.remindAt,
+      status: reminder.status,
     });
   });
 
   return Array.from(groupsMap.values()).sort((a, b) => {
     const dateA = new Date(a.date.split('/').reverse().join('-'));
     const dateB = new Date(b.date.split('/').reverse().join('-'));
-    return dateB.getTime() - dateA.getTime();
+    return dateA.getTime() - dateB.getTime(); // Ascending order for reminders
   });
 }
 
@@ -303,7 +284,11 @@ export default function DashboardPage() {
   
   // Derived groups from transactions
   const transactionGroups = transformTransactionsToGroups(transactions);
-  const taskGroups = transformTransactionsToTaskGroups(transactions);
+  
+  // Reminders state
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [isLoadingReminders, setIsLoadingReminders] = useState<boolean>(true);
+  const reminderGroups = transformRemindersToGroups(reminders);
   
   // Stats and chart state
   const [spendingData, setSpendingData] = useState<Array<{ month: string; value: number }>>([]);
@@ -369,6 +354,26 @@ export default function DashboardPage() {
       console.error('Failed to load shortcuts:', err);
     } finally {
       setIsLoadingShortcuts(false);
+    }
+  }, []);
+
+  // Load reminders for the period
+  const loadRemindersForPeriod = useCallback(async (period: PeriodType) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) return;
+
+    setIsLoadingReminders(true);
+    try {
+      const { startDate, endDate } = getDateRange(period);
+      const data = await fetchReminders(session.lineUserId, {
+        startDate,
+        endDate,
+      });
+      setReminders(data);
+    } catch (err) {
+      console.error('Failed to load reminders:', err);
+    } finally {
+      setIsLoadingReminders(false);
     }
   }, []);
 
@@ -494,14 +499,16 @@ export default function DashboardPage() {
   useEffect(() => {
     // Reset pagination state
     setTransactions([]);
+    setReminders([]);
     setHasMore(false);
     setIsLoadingMore(false);
     
-    // Load shortcuts, stats and initial transactions in parallel
+    // Load shortcuts, stats, transactions, and reminders in parallel
     loadShortcuts();
     loadStatsForPeriod(selectedPeriod);
     loadInitialTransactionsForPeriod(selectedPeriod);
-  }, [selectedPeriod, loadStatsForPeriod, loadInitialTransactionsForPeriod, loadShortcuts]);
+    loadRemindersForPeriod(selectedPeriod);
+  }, [selectedPeriod, loadStatsForPeriod, loadInitialTransactionsForPeriod, loadShortcuts, loadRemindersForPeriod]);
 
   const handleDeleteTransaction = async (transaction: { id: string }) => {
     const session = getUserSession();
@@ -685,6 +692,62 @@ export default function DashboardPage() {
     }
 
     router.push(`/transaction/add?${params.toString()}`);
+  };
+
+  // Reminder handlers
+  const handleDoneReminder = async (reminder: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      await updateReminder(session.lineUserId, reminder.id, { status: 'DONE' });
+      setReminders((prev) =>
+        prev.map((r) => (r.id === reminder.id ? { ...r, status: 'DONE' as const } : r))
+      );
+    } catch (err) {
+      console.error('Failed to mark reminder as done:', err);
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || 'Failed to mark reminder as done');
+    }
+  };
+
+  const handleBackReminder = async (reminder: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      await updateReminder(session.lineUserId, reminder.id, { status: 'ACTIVE' });
+      setReminders((prev) =>
+        prev.map((r) => (r.id === reminder.id ? { ...r, status: 'ACTIVE' as const } : r))
+      );
+    } catch (err) {
+      console.error('Failed to mark reminder as active:', err);
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || 'Failed to mark reminder as active');
+    }
+  };
+
+  const handleDeleteReminder = async (reminder: { id: string }) => {
+    const session = getUserSession();
+    if (!session?.lineUserId) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      await deleteReminder(session.lineUserId, reminder.id);
+      setReminders((prev) => prev.filter((r) => r.id !== reminder.id));
+    } catch (err) {
+      console.error('Failed to delete reminder:', err);
+      const errorObj = err as { error?: string };
+      alert(errorObj.error || 'Failed to delete reminder');
+    }
   };
 
   const session = getUserSession();
@@ -901,50 +964,48 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              {/* Task List Section */}
+              {/* Reminder List Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-sm font-black text-foreground/30 uppercase tracking-[0.2em] font-prompt">
-                    งานที่ต้องจัดการ
+                    การแจ้งเตือน
                   </h3>
+                  <Link
+                    href="/reminders/add"
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-primary rounded-2xl hover:brightness-105 shadow-lg shadow-primary/20 transition-all active:scale-95 font-prompt"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    เพิ่ม
+                  </Link>
                 </div>
-                {isLoadingList ? (
+                {isLoadingReminders ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3 glass rounded-[2.5rem]">
                     <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <p className="text-xs font-medium text-foreground/30 font-prompt">กําลังตรวจสอบงาน...</p>
+                    <p className="text-xs font-medium text-foreground/30 font-prompt">กำลังโหลดการแจ้งเตือน...</p>
                   </div>
                 ) : error ? (
                   <div className="glass p-12 rounded-[2.5rem] text-center">
                     <p className="text-sm font-medium text-destructive font-prompt">{error}</p>
                   </div>
-                ) : taskGroups.length > 0 ? (
-                  <>
-                    <TaskList
-                      groups={taskGroups}
-                      onDone={handleDoneTransaction}
-                      onBack={handleBackTransaction}
-                      onDelete={handleDeleteTransaction}
-                      onDoneAllForDate={handleDoneAllForDate}
-                      onDoneAllForPeriod={handleDoneAllForPeriod}
-                      selectedPeriod={selectedPeriod}
-                    />
-                    
-                    {/* View More Button */}
-                    {hasMore && (
-                      <div className="mt-10 mb-8 text-center">
-                        <button
-                          onClick={loadMoreTransactions}
-                          disabled={isLoadingMore}
-                          className="px-10 py-4 text-xs font-bold text-foreground/40 hover:text-primary glass rounded-full shadow-lg shadow-black/5 border-white/20 transition-all active:scale-95 disabled:opacity-50 font-prompt"
-                        >
-                          {isLoadingMore ? 'แป๊บเดียวครับ...' : 'ย้อนไปดูงานเก่า'}
-                        </button>
-                      </div>
-                    )}
-                  </>
+                ) : reminderGroups.length > 0 ? (
+                  <ReminderList
+                    groups={reminderGroups}
+                    onDone={handleDoneReminder}
+                    onBack={handleBackReminder}
+                    onDelete={handleDeleteReminder}
+                  />
                 ) : (
                   <div className="glass p-16 rounded-[2.5rem] text-center border-dashed border-2 border-foreground/5">
-                    <p className="text-sm font-medium text-foreground/30 font-prompt">ไม่มีงานค้างแล้วครับ เย่!</p>
+                    <div className="flex flex-col items-center gap-4">
+                      <span className="text-4xl">🔔</span>
+                      <p className="text-sm font-medium text-foreground/30 font-prompt">ยังไม่มีการแจ้งเตือนครับ</p>
+                      <Link
+                        href="/reminders/add"
+                        className="px-6 py-3 text-sm font-bold text-white bg-primary rounded-2xl hover:brightness-105 shadow-lg shadow-primary/20 transition-all active:scale-95 font-prompt"
+                      >
+                        + เพิ่มการแจ้งเตือน
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
