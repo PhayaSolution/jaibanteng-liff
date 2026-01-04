@@ -12,10 +12,19 @@ import { sendDebugToOA } from '@/app/utils/debug.util';
 export default function RemindingSettingsPage() {
   const router = useRouter();
   const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderLeadMinutes, setReminderLeadMinutes] = useState(15);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to format lead time in Thai
+  const formatLeadTime = (minutes: number): string => {
+    if (minutes === 15) return '15 นาที';
+    if (minutes === 30) return '30 นาที';
+    if (minutes === 120) return '2 ชั่วโมง';
+    return `${minutes} นาที`;
+  };
 
   useEffect(() => {
     async function loadSettings() {
@@ -32,6 +41,7 @@ export default function RemindingSettingsPage() {
       try {
         const settings = await getReminderSettings(session.lineUserId);
         setReminderEnabled(settings.reminderEnabled);
+        setReminderLeadMinutes(settings.reminderLeadMinutes);
       } catch (err) {
         console.error('Failed to load reminder settings:', err);
         const errorObj = err as { error?: string };
@@ -121,7 +131,7 @@ export default function RemindingSettingsPage() {
               แจ้งเตือนผ่าน LINE
             </h3>
             <p className="text-sm text-foreground/50 font-prompt leading-relaxed">
-              เมื่อเปิดใช้งาน ระบบจะส่งข้อความแจ้งเตือนไปยัง LINE ของคุณล่วงหน้า 2 ชั่วโมงก่อนถึงเวลาที่กำหนด
+              เมื่อเปิดใช้งาน ระบบจะส่งข้อความแจ้งเตือนไปยัง LINE ของคุณล่วงหน้า {formatLeadTime(reminderLeadMinutes)} ก่อนถึงเวลาที่กำหนด
             </p>
           </div>
         </div>
@@ -130,38 +140,95 @@ export default function RemindingSettingsPage() {
       {/* Toggle Setting */}
       <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <SettingsSection title="ตั้งค่า">
-          <div className="glass rounded-[2rem] p-6 shadow-xl shadow-black/5 border-white/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 rounded-2xl bg-foreground/5 text-primary">
-                  <Bell className="w-5 h-5" />
+          <div className="space-y-4">
+            {/* Toggle Switch */}
+            <div className="glass rounded-[2rem] p-6 shadow-xl shadow-black/5 border-white/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-2xl bg-foreground/5 text-primary">
+                    <Bell className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground font-prompt">
+                      เปิดการแจ้งเตือน
+                    </p>
+                    <p className="text-xs text-foreground/40 font-medium font-prompt">
+                      {reminderEnabled ? 'กำลังใช้งาน' : 'ปิดอยู่'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground font-prompt">
-                    เปิดการแจ้งเตือน
-                  </p>
-                  <p className="text-xs text-foreground/40 font-medium font-prompt">
-                    {reminderEnabled ? 'กำลังใช้งาน' : 'ปิดอยู่'}
-                  </p>
-                </div>
+                
+                {/* Toggle Switch */}
+                <button
+                  onClick={handleToggle}
+                  disabled={isSaving}
+                  className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
+                    reminderEnabled 
+                      ? 'bg-primary shadow-lg shadow-primary/30' 
+                      : 'bg-foreground/10'
+                  } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <div
+                    className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-300 ${
+                      reminderEnabled ? 'left-7' : 'left-1'
+                    }`}
+                  />
+                </button>
               </div>
-              
-              {/* Toggle Switch */}
-              <button
-                onClick={handleToggle}
-                disabled={isSaving}
-                className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
-                  reminderEnabled 
-                    ? 'bg-primary shadow-lg shadow-primary/30' 
-                    : 'bg-foreground/10'
-                } ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                <div
-                  className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-300 ${
-                    reminderEnabled ? 'left-7' : 'left-1'
-                  }`}
-                />
-              </button>
+            </div>
+
+            {/* Lead Time Selector */}
+            <div className="glass rounded-[2rem] p-6 shadow-xl shadow-black/5 border-white/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-2xl bg-foreground/5 text-primary">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground font-prompt">
+                      แจ้งเตือนล่วงหน้า
+                    </p>
+                    <p className="text-xs text-foreground/40 font-medium font-prompt">
+                      เลือกเวลาที่ต้องการแจ้งเตือนก่อนถึงเวลาจริง
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Lead Time Selector */}
+                <select
+                  value={reminderLeadMinutes}
+                  onChange={async (e) => {
+                    const newValue = parseInt(e.target.value, 10);
+                    const session = getUserSession();
+                    if (!session?.lineUserId) {
+                      setError('กรุณาเข้าสู่ระบบก่อนครับ');
+                      return;
+                    }
+
+                    setIsSaving(true);
+                    setError(null);
+
+                    try {
+                      await updateReminderSettings(session.lineUserId, { reminderLeadMinutes: newValue });
+                      setReminderLeadMinutes(newValue);
+                    } catch (err) {
+                      console.error('Failed to update reminder lead time:', err);
+                      const errorObj = err as { error?: string };
+                      setError(errorObj.error || 'ไม่สามารถบันทึกการตั้งค่าได้');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  disabled={isSaving || !reminderEnabled}
+                  className="appearance-none px-4 py-2 pr-10 rounded-2xl border-0 bg-foreground/5 text-sm font-bold text-foreground hover:bg-foreground/10 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed font-prompt"
+                >
+                  <option value={15}>15 นาที</option>
+                  <option value={30}>30 นาที</option>
+                  <option value={120}>2 ชั่วโมง</option>
+                </select>
+              </div>
             </div>
           </div>
         </SettingsSection>

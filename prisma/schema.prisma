@@ -32,15 +32,16 @@ enum DeliveryStatus {
 }
 
 model User {
-  id              String   @id @default(uuid())
-  lineUserId      String   @unique
-  displayName     String
-  pictureUrl      String?
-  email           String?
-  phoneNumber     String?
-  reminderEnabled Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  lineUserId          String   @unique
+  displayName         String
+  pictureUrl          String?
+  email               String?
+  phoneNumber         String?
+  reminderEnabled     Boolean  @default(false)
+  reminderLeadMinutes Int      @default(15)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   categories          Category[]
   tags                Tag[]

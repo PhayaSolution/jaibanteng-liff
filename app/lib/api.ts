@@ -360,7 +360,7 @@ export async function getReminderSettings(lineUserId: string): Promise<ReminderS
 
 export async function updateReminderSettings(
   lineUserId: string,
-  payload: ReminderSettings
+  payload: Partial<ReminderSettings>
 ): Promise<ReminderSettings> {
   const data = await apiRequest<{ settings: ReminderSettings }>('/api/reminders/settings', {
     method: 'PUT',

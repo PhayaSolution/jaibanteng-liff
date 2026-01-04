@@ -7,11 +7,13 @@ import { sendLinePushMessage, formatReminderNotification } from '@/app/lib/line'
  * 
  * This endpoint should be called every 15 minutes by an external scheduler (or Vercel Cron).
  * It will:
- * 1. Find all ACTIVE reminders due within the next 30 minutes
- * 2. Filter out reminders that have already been sent for their current remindAt time
- * 3. Group reminders by user
- * 4. Send aggregated LINE messages to users with reminderEnabled = true
- * 5. Log delivery status to prevent duplicate sends
+ * 1. Find all ACTIVE reminders due within the next 120 minutes (max lead time)
+ * 2. For each reminder, compute notifyAt = remindAt - user.reminderLeadMinutes
+ * 3. Filter reminders where notifyAt is within the last 30 minutes (lookback window)
+ * 4. Filter out reminders that have already been sent for their current remindAt time
+ * 5. Group reminders by user
+ * 6. Send aggregated LINE messages to users with reminderEnabled = true
+ * 7. Log delivery status to prevent duplicate sends
  * 
  * Authentication:
  * - Vercel Cron: Uses CRON_SECRET in vercel.json and verifies via headers
@@ -41,36 +43,25 @@ export async function GET(request: NextRequest) {
 
   try {
     const now = new Date();
-    const thirtyMinutesLater = new Date(now.getTime() + 30 * 60 * 1000);
+    const maxLeadMinutes = 120; // Maximum lead time (2 hours)
+    const lookbackMinutes = 30; // Lookback window for sending (30 minutes)
+    const maxRemindAt = new Date(now.getTime() + maxLeadMinutes * 60 * 1000);
+    const lookbackStart = new Date(now.getTime() - lookbackMinutes * 60 * 1000);
 
     console.log(`[Reminder Cron] Running at ${now.toISOString()}`);
-    console.log(`[Reminder Cron] Looking for reminders between ${now.toISOString()} and ${thirtyMinutesLater.toISOString()}`);
+    console.log(`[Reminder Cron] Looking for reminders with remindAt up to ${maxRemindAt.toISOString()}`);
 
-    // Find all ACTIVE reminders due within the next 30 minutes
-    // Join with user to check reminderEnabled
-    // Exclude reminders that have already been sent for this remindAt time
+    // Find all ACTIVE reminders due within the next maxLeadMinutes (120 minutes)
+    // Join with user to check reminderEnabled and get reminderLeadMinutes
     const reminders = await prisma.reminder.findMany({
       where: {
         status: 'ACTIVE',
         remindAt: {
           gt: now,
-          lte: thirtyMinutesLater,
+          lte: maxRemindAt,
         },
         user: {
           reminderEnabled: true,
-        },
-        // Exclude reminders that already have a successful delivery for this remindAt
-        deliveries: {
-          none: {
-            status: 'SENT',
-            // Use sentFor to match the exact remindAt time
-            // This allows re-sending if user changes the time
-            sentFor: {
-              // We need to match the exact remindAt time
-              // But since we're checking deliveries, we just exclude any SENT deliveries
-              // with sentFor matching the current remindAt
-            },
-          },
         },
       },
       include: {
@@ -79,6 +70,7 @@ export async function GET(request: NextRequest) {
             id: true,
             lineUserId: true,
             reminderEnabled: true,
+            reminderLeadMinutes: true,
           },
         },
         deliveries: {
@@ -92,11 +84,26 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Filter out reminders that have already been sent for this exact remindAt time
+    // For each reminder, compute notifyAt = remindAt - user.reminderLeadMinutes
+    // Filter reminders where notifyAt is within the lookback window
+    // Also filter out reminders that have already been sent for this exact remindAt time
     const remindersToSend = reminders.filter((reminder) => {
+      // Compute when this reminder should be sent (notifyAt)
+      const notifyAt = new Date(
+        reminder.remindAt.getTime() - reminder.user.reminderLeadMinutes * 60 * 1000
+      );
+
+      // Only send if notifyAt is within the lookback window (last 30 minutes)
+      // This ensures we catch reminders that should be sent now, even if cron is slightly delayed
+      if (notifyAt < lookbackStart || notifyAt > now) {
+        return false;
+      }
+
+      // Check if already sent for this exact remindAt time
       const alreadySent = reminder.deliveries.some(
         (d) => d.sentFor.getTime() === reminder.remindAt.getTime()
       );
+
       return !alreadySent;
     });
 

@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       settings: {
         reminderEnabled: user.reminderEnabled,
+        reminderLeadMinutes: user.reminderLeadMinutes,
       },
     });
   } catch (error) {
@@ -57,23 +58,53 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reminderEnabled } = body;
+    const { reminderEnabled, reminderLeadMinutes } = body;
 
-    if (typeof reminderEnabled !== 'boolean') {
+    const updateData: { reminderEnabled?: boolean; reminderLeadMinutes?: number } = {};
+
+    if (reminderEnabled !== undefined) {
+      if (typeof reminderEnabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'reminderEnabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+      updateData.reminderEnabled = reminderEnabled;
+    }
+
+    if (reminderLeadMinutes !== undefined) {
+      if (typeof reminderLeadMinutes !== 'number') {
+        return NextResponse.json(
+          { error: 'reminderLeadMinutes must be a number' },
+          { status: 400 }
+        );
+      }
+      // Validate that it's one of the allowed values: 15, 30, or 120
+      if (![15, 30, 120].includes(reminderLeadMinutes)) {
+        return NextResponse.json(
+          { error: 'reminderLeadMinutes must be 15, 30, or 120' },
+          { status: 400 }
+        );
+      }
+      updateData.reminderLeadMinutes = reminderLeadMinutes;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: 'reminderEnabled must be a boolean' },
+        { error: 'No valid fields to update' },
         { status: 400 }
       );
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { reminderEnabled },
+      data: updateData,
     });
 
     return NextResponse.json({
       settings: {
         reminderEnabled: updatedUser.reminderEnabled,
+        reminderLeadMinutes: updatedUser.reminderLeadMinutes,
       },
     });
   } catch (error) {

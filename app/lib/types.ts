@@ -101,5 +101,6 @@ export interface ReminderDelivery {
 
 export interface ReminderSettings {
   reminderEnabled: boolean;
+  reminderLeadMinutes: number;
 }
 

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Container from '@/app/components/layout/container.component';
 import SafeArea from '@/app/components/layout/safe-area.component';
 import { DateTimePicker } from '@/app/components/ui/date-time-picker';
-import { createReminder } from '@/app/lib/api';
+import { createReminder, getReminderSettings } from '@/app/lib/api';
 import { getUserSession } from '@/app/utils/storage.util';
 
 export default function AddReminderPage() {
@@ -20,8 +20,35 @@ export default function AddReminderPage() {
     now.setSeconds(0);
     return now;
   });
+  const [reminderLeadMinutes, setReminderLeadMinutes] = useState(15);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to format lead time in Thai
+  const formatLeadTime = (minutes: number): string => {
+    if (minutes === 15) return '15 นาที';
+    if (minutes === 30) return '30 นาที';
+    if (minutes === 120) return '2 ชั่วโมง';
+    return `${minutes} นาที`;
+  };
+
+  // Load reminder settings to get lead time
+  useEffect(() => {
+    async function loadSettings() {
+      const session = getUserSession();
+      if (!session?.lineUserId) return;
+
+      try {
+        const settings = await getReminderSettings(session.lineUserId);
+        setReminderLeadMinutes(settings.reminderLeadMinutes);
+      } catch (err) {
+        console.error('Failed to load reminder settings:', err);
+        // Use default value if loading fails
+      }
+    }
+
+    loadSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +164,7 @@ export default function AddReminderPage() {
               className="w-full px-4 py-3 bg-foreground/5 border-2 border-foreground/10 focus:border-primary focus:ring-0 rounded-2xl text-base font-bold text-foreground font-prompt transition-colors"
             />
             <p className="mt-3 text-xs text-foreground/40 font-prompt">
-              💡 ระบบจะแจ้งเตือนผ่าน LINE ล่วงหน้า 2 ชั่วโมงก่อนถึงเวลาที่กำหนด
+              💡 ระบบจะแจ้งเตือนผ่าน LINE ล่วงหน้า {formatLeadTime(reminderLeadMinutes)} ก่อนถึงเวลาที่กำหนด
             </p>
           </div>
 
