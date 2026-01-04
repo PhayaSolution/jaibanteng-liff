@@ -370,3 +370,57 @@ export async function updateReminderSettings(
   return data.settings;
 }
 
+// ==================== Export CSV API ====================
+
+export interface ExportCsvParams {
+  startDate: string; // ISO string
+  endDate: string; // ISO string
+  type?: TransactionType;
+}
+
+/**
+ * Download transactions as CSV file
+ * Returns the blob and filename for download
+ */
+export async function downloadTransactionsCsv(
+  lineUserId: string,
+  params: ExportCsvParams
+): Promise<{ blob: Blob; filename: string }> {
+  const searchParams = new URLSearchParams({
+    startDate: params.startDate,
+    endDate: params.endDate,
+  });
+
+  if (params.type) {
+    searchParams.append('type', params.type);
+  }
+
+  const response = await fetch(getApiUrl(`/api/transactions/export?${searchParams.toString()}`), {
+    headers: {
+      'x-line-user-id': lineUserId,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const error: ApiError = {
+      error: errorData.error || `HTTP ${response.status}`,
+      details: errorData.details,
+    };
+    throw error;
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get('Content-Disposition');
+  let filename = 'transactions.csv';
+
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+    if (filenameMatch && filenameMatch[1]) {
+      filename = filenameMatch[1];
+    }
+  }
+
+  return { blob, filename };
+}
+

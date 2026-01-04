@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { User as UserIcon, List, Tags, LogOut, ChevronRight, PieChart, Bell } from 'lucide-react';
+import { User as UserIcon, List, Tags, LogOut, ChevronRight, PieChart, Bell, Download } from 'lucide-react';
 import BottomNavigation from '@/app/components/layout/bottom-navigation.component';
 import SettingsLayout from '@/app/components/settings/settings-layout.component';
 import SettingsSection from '@/app/components/settings/settings-section.component';
@@ -128,6 +128,12 @@ export default function SettingsPage() {
             description="เปิด/ปิดการแจ้งเตือนผ่าน LINE"
             icon={<Bell className="w-5 h-5" />}
             href="/settings/reminding"
+          />
+          <SettingsListItem
+            title="ส่งออก CSV"
+            description="ดาวน์โหลดรายรับรายจ่ายเป็นไฟล์ CSV"
+            icon={<Download className="w-5 h-5" />}
+            href="/settings/export"
           />
         </SettingsSection>
       </div>
